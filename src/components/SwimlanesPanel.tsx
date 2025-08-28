@@ -70,7 +70,7 @@ export function SwimlanesPanel({
         variant="outline"
         size="sm"
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-4 right-4 z-10 shadow-lg"
+        className="fixed bottom-16 right-4 z-10 shadow-lg"
       >
         <Layers className="h-4 w-4 mr-2" />
         Raias
@@ -79,7 +79,7 @@ export function SwimlanesPanel({
   }
 
   return (
-    <Card className="fixed bottom-4 right-4 z-20 w-80 shadow-lg">
+    <Card className="fixed bottom-16 right-4 z-20 w-80 shadow-lg">
       <CardHeader className="pb-3">
         <CardTitle className="text-sm flex items-center justify-between">
           <div className="flex items-center">
