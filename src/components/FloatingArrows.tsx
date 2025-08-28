@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Button } from './ui/button';
-import { Plus } from 'lucide-react';
+import { ArrowUp, ArrowDown, ArrowLeft, ArrowRight } from 'lucide-react';
 import { Node, useReactFlow } from '@xyflow/react';
 
 interface FloatingArrowsProps {
@@ -46,60 +46,60 @@ export function FloatingArrows({ selectedNode, onAddConnectedNode }: FloatingArr
       <Button
         variant="secondary"
         size="sm"
-        className="absolute pointer-events-auto w-8 h-8 p-0 rounded-full shadow-lg bg-card border-border hover:bg-accent transition-all"
+        className="absolute pointer-events-auto w-8 h-8 p-0 rounded-full shadow-lg bg-card border-border hover:bg-accent transition-all hover:scale-110"
         style={{
           left: screenPosition.x + nodeWidth / 2 - 16,
           top: screenPosition.y - 32,
         }}
         onClick={() => handleAddNode('top')}
-        title="Add node above"
+        title="Adicionar nó acima"
       >
-        <Plus className="w-4 h-4" />
+        <ArrowUp className="w-4 h-4" />
       </Button>
 
       {/* Bottom Arrow */}
       <Button
         variant="secondary"
         size="sm"
-        className="absolute pointer-events-auto w-8 h-8 p-0 rounded-full shadow-lg bg-card border-border hover:bg-accent transition-all"
+        className="absolute pointer-events-auto w-8 h-8 p-0 rounded-full shadow-lg bg-card border-border hover:bg-accent transition-all hover:scale-110"
         style={{
           left: screenPosition.x + nodeWidth / 2 - 16,
           top: screenPosition.y + nodeHeight + 8,
         }}
         onClick={() => handleAddNode('bottom')}
-        title="Add node below"
+        title="Adicionar nó abaixo"
       >
-        <Plus className="w-4 h-4" />
+        <ArrowDown className="w-4 h-4" />
       </Button>
 
       {/* Left Arrow */}
       <Button
         variant="secondary"
         size="sm"
-        className="absolute pointer-events-auto w-8 h-8 p-0 rounded-full shadow-lg bg-card border-border hover:bg-accent transition-all"
+        className="absolute pointer-events-auto w-8 h-8 p-0 rounded-full shadow-lg bg-card border-border hover:bg-accent transition-all hover:scale-110"
         style={{
           left: screenPosition.x - 32,
           top: screenPosition.y + nodeHeight / 2 - 16,
         }}
         onClick={() => handleAddNode('left')}
-        title="Add node to the left"
+        title="Adicionar nó à esquerda"
       >
-        <Plus className="w-4 h-4" />
+        <ArrowLeft className="w-4 h-4" />
       </Button>
 
       {/* Right Arrow */}
       <Button
         variant="secondary"
         size="sm"
-        className="absolute pointer-events-auto w-8 h-8 p-0 rounded-full shadow-lg bg-card border-border hover:bg-accent transition-all"
+        className="absolute pointer-events-auto w-8 h-8 p-0 rounded-full shadow-lg bg-card border-border hover:bg-accent transition-all hover:scale-110"
         style={{
           left: screenPosition.x + nodeWidth + 8,
           top: screenPosition.y + nodeHeight / 2 - 16,
         }}
         onClick={() => handleAddNode('right')}
-        title="Add node to the right"
+        title="Adicionar nó à direita"
       >
-        <Plus className="w-4 h-4" />
+        <ArrowRight className="w-4 h-4" />
       </Button>
     </div>
   );

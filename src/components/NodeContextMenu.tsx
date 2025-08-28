@@ -1,57 +1,64 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Button } from './ui/button';
-import { Card } from './ui/card';
+import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Node } from '@xyflow/react';
 import { 
   ArrowUp, 
   ArrowDown, 
   ArrowLeft, 
-  ArrowRight, 
-  Square, 
-  Circle, 
+  ArrowRight,
+  Square,
+  Circle,
   Triangle,
   Diamond,
   Hexagon,
-  Edit
+  Edit3,
+  Palette
 } from 'lucide-react';
-import { Node } from '@xyflow/react';
+import { NodeColorEditor } from './NodeColorEditor';
 
 interface NodeContextMenuProps {
   selectedNodes: Node[];
-  onAddConnectedNode: (nodeId: string, direction: 'top' | 'bottom' | 'left' | 'right') => void;
-  onChangeShape: (nodeId: string, shape: string) => void;
-  onEditLabel: (nodeId: string) => void;
   position: { x: number; y: number } | null;
+  visible: boolean;
+  onAddConnectedNode: (parentNodeId: string, direction: 'top' | 'bottom' | 'left' | 'right') => void;
+  onChangeShape: (nodeIds: string[], shape: string) => void;
+  onEditLabel: (nodeId: string) => void;
+  onChangeColor: (nodeIds: string[], colorType: 'border' | 'background' | 'text', color: string, hsl: string) => void;
   onClose: () => void;
 }
 
 const shapes = [
-  { name: 'rectangle', icon: Square, preview: '▭' },
-  { name: 'circle', icon: Circle, preview: '●' },
-  { name: 'diamond', icon: Diamond, preview: '◆' },
-  { name: 'triangle', icon: Triangle, preview: '▲' },
-  { name: 'hexagon', icon: Hexagon, preview: '⬡' },
+  { value: 'rectangle', name: 'Retângulo', icon: Square, preview: '▭' },
+  { value: 'circle', name: 'Círculo', icon: Circle, preview: '●' },
+  { value: 'diamond', name: 'Losango', icon: Diamond, preview: '◆' },
+  { value: 'triangle', name: 'Triângulo', icon: Triangle, preview: '▲' },
+  { value: 'hexagon', name: 'Hexágono', icon: Hexagon, preview: '⬡' },
 ];
 
 const directions = [
-  { name: 'top', icon: ArrowUp, label: 'Add Above' },
-  { name: 'right', icon: ArrowRight, label: 'Add Right' },
-  { name: 'bottom', icon: ArrowDown, label: 'Add Below' },
-  { name: 'left', icon: ArrowLeft, label: 'Add Left' },
+  { value: 'top' as const, icon: ArrowUp, label: 'Acima' },
+  { value: 'right' as const, icon: ArrowRight, label: 'Direita' },
+  { value: 'bottom' as const, icon: ArrowDown, label: 'Abaixo' },
+  { value: 'left' as const, icon: ArrowLeft, label: 'Esquerda' },
 ];
 
-export function NodeContextMenu({
-  selectedNodes,
-  onAddConnectedNode,
-  onChangeShape,
-  onEditLabel,
-  position,
-  onClose
+export function NodeContextMenu({ 
+  selectedNodes, 
+  position, 
+  visible, 
+  onAddConnectedNode, 
+  onChangeShape, 
+  onEditLabel, 
+  onChangeColor,
+  onClose 
 }: NodeContextMenuProps) {
-  const [isVisible, setIsVisible] = useState(false);
+  const [menuVisible, setMenuVisible] = useState(visible);
+  const [showColorEditor, setShowColorEditor] = useState(false);
 
   useEffect(() => {
-    setIsVisible(!!position && selectedNodes.length === 1);
-  }, [position, selectedNodes]);
+    setMenuVisible(visible);
+  }, [visible]);
 
   const handleAddNode = useCallback((direction: 'top' | 'bottom' | 'left' | 'right') => {
     if (selectedNodes.length === 1) {
@@ -61,10 +68,10 @@ export function NodeContextMenu({
   }, [selectedNodes, onAddConnectedNode, onClose]);
 
   const handleShapeChange = useCallback((shape: string) => {
-    if (selectedNodes.length === 1) {
-      onChangeShape(selectedNodes[0].id, shape);
-    }
-  }, [selectedNodes, onChangeShape]);
+    const nodeIds = selectedNodes.map(n => n.id);
+    onChangeShape(nodeIds, shape);
+    onClose();
+  }, [selectedNodes, onChangeShape, onClose]);
 
   const handleEdit = useCallback(() => {
     if (selectedNodes.length === 1) {
@@ -79,7 +86,7 @@ export function NodeContextMenu({
       if (e.key === 'Escape') onClose();
     };
 
-    if (isVisible) {
+    if (menuVisible) {
       document.addEventListener('click', handleClickOutside);
       document.addEventListener('keydown', handleEscape);
     }
@@ -88,65 +95,109 @@ export function NodeContextMenu({
       document.removeEventListener('click', handleClickOutside);
       document.removeEventListener('keydown', handleEscape);
     };
-  }, [isVisible, onClose]);
+  }, [menuVisible, onClose]);
 
-  if (!isVisible || !position || selectedNodes.length !== 1) return null;
+  if (!menuVisible || !position) {
+    return null;
+  }
+
+  if (showColorEditor) {
+    return (
+      <div 
+        className="fixed z-50"
+        style={{ left: position.x, top: position.y }}
+      >
+        <NodeColorEditor 
+          nodeIds={selectedNodes.map(n => n.id)}
+          onColorChange={onChangeColor}
+          onClose={() => {
+            setShowColorEditor(false);
+            onClose();
+          }}
+        />
+      </div>
+    );
+  }
 
   return (
     <Card 
-      className="absolute z-50 p-2 bg-card border-border shadow-toolbar"
-      style={{
-        left: position.x,
-        top: position.y,
-        minWidth: '200px'
-      }}
+      className="fixed z-50 bg-card border-border shadow-toolbar min-w-[220px] p-3"
+      style={{ left: position.x, top: position.y }}
       onClick={(e) => e.stopPropagation()}
     >
-      <div className="flex flex-col gap-1">
-        {/* Add Connected Node Options */}
-        <div className="text-xs font-medium text-muted-foreground mb-1">Add Connected Node</div>
-        <div className="grid grid-cols-2 gap-1 mb-2">
-          {directions.map(({ name, icon: Icon, label }) => (
-            <Button
-              key={name}
-              variant="ghost"
-              size="sm"
-              onClick={() => handleAddNode(name as any)}
-              className="h-8 text-xs justify-start gap-1"
-            >
-              <Icon className="w-3 h-3" />
-              <span className="truncate">{label}</span>
-            </Button>
-          ))}
+      <div className="space-y-3">
+        {/* Actions for nodes */}
+        {selectedNodes.length === 1 && (
+          <>
+            <div className="space-y-1">
+              <div className="text-xs text-muted-foreground px-2 py-1 uppercase tracking-wider">
+                Adicionar Conexão
+              </div>
+              {directions.map((direction) => {
+                const Icon = direction.icon;
+                return (
+                  <Button
+                    key={direction.value}
+                    variant="ghost"
+                    size="sm"
+                    className="w-full justify-start gap-2 text-sm"
+                    onClick={() => handleAddNode(direction.value)}
+                  >
+                    <Icon className="h-4 w-4" />
+                    {direction.label}
+                  </Button>
+                );
+              })}
+            </div>
+            
+            <div className="w-full h-px bg-border" />
+          </>
+        )}
+        
+        <div className="space-y-1">
+          <div className="text-xs text-muted-foreground px-2 py-1 uppercase tracking-wider">
+            Formato
+          </div>
+          {shapes.map((shape) => {
+            const Icon = shape.icon;
+            return (
+              <Button
+                key={shape.value}
+                variant="ghost"
+                size="sm"
+                className="w-full justify-start gap-2 text-sm"
+                onClick={() => handleShapeChange(shape.value)}
+              >
+                <Icon className="h-4 w-4" />
+                {shape.name}
+              </Button>
+            );
+          })}
         </div>
-
-        {/* Shape Change Options */}
-        <div className="text-xs font-medium text-muted-foreground mb-1">Change Shape</div>
-        <div className="grid grid-cols-3 gap-1 mb-2">
-          {shapes.map(({ name, icon: Icon, preview }) => (
-            <Button
-              key={name}
-              variant="ghost"
-              size="sm"
-              onClick={() => handleShapeChange(name)}
-              className="h-8 text-xs justify-start gap-1"
-            >
-              <Icon className="w-3 h-3" />
-              <span className="capitalize text-xs">{name}</span>
-            </Button>
-          ))}
-        </div>
-
-        {/* Edit Label */}
+        
+        <div className="w-full h-px bg-border" />
+        
         <Button
           variant="ghost"
           size="sm"
-          onClick={handleEdit}
-          className="h-8 text-xs justify-start gap-1"
+          className="w-full justify-start gap-2 text-sm"
+          onClick={() => setShowColorEditor(true)}
         >
-          <Edit className="w-3 h-3" />
-          Edit Label
+          <Palette className="h-4 w-4" />
+          Personalizar Cores
         </Button>
+
+        {selectedNodes.length === 1 && (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="w-full justify-start gap-2 text-sm"
+            onClick={handleEdit}
+          >
+            <Edit3 className="h-4 w-4" />
+            Editar Texto
+          </Button>
+        )}
       </div>
     </Card>
   );

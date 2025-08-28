@@ -127,7 +127,12 @@ export function DiagramCanvas({ draggedItem, onDrop: onDropProp, sidebarCollapse
   }, [templateToApply, setNodes, setEdges]);
 
   const onConnect = useCallback(
-    (params: Connection) => setEdges((eds) => addEdge(params, eds)),
+    (params: Connection) => setEdges((eds) => addEdge({
+      ...params,
+      type: 'smoothstep',
+      markerEnd: { type: 'arrowclosed' },
+      style: { stroke: 'hsl(var(--primary))', strokeWidth: 2 }
+    }, eds)),
     [setEdges]
   );
 
@@ -206,6 +211,7 @@ export function DiagramCanvas({ draggedItem, onDrop: onDropProp, sidebarCollapse
       source: parentNodeId,
       target: newNodeId,
       type: 'smoothstep',
+      markerEnd: { type: 'arrowclosed' },
       style: { stroke: 'hsl(var(--primary))', strokeWidth: 2 }
     };
 
@@ -245,6 +251,7 @@ export function DiagramCanvas({ draggedItem, onDrop: onDropProp, sidebarCollapse
         parsedData = { item: draggedItem.item, type: draggedItem.type };
       }
 
+      // Melhor conversão usando screenToFlowPosition se disponível
       const position = {
         x: event.clientX - reactFlowBounds.left,
         y: event.clientY - reactFlowBounds.top,
@@ -258,7 +265,9 @@ export function DiagramCanvas({ draggedItem, onDrop: onDropProp, sidebarCollapse
           label: parsedData.item.name,
           nodeType: parsedData.type,
           shape: parsedData.item.name.toLowerCase(),
-          preview: parsedData.item.preview
+          preview: parsedData.item.preview,
+          color: '#3b82f6', // Cor padrão azul
+          backgroundColor: '#eff6ff' // Background padrão azul claro
         },
       };
 
@@ -303,10 +312,10 @@ export function DiagramCanvas({ draggedItem, onDrop: onDropProp, sidebarCollapse
     setSelectedNodes([node]);
   }, []);
 
-  const handleChangeShape = useCallback((nodeId: string, newShape: string) => {
+  const handleChangeShape = useCallback((nodeIds: string[], newShape: string) => {
     setNodes((nds) => 
       nds.map(node => 
-        node.id === nodeId 
+        nodeIds.includes(node.id)
           ? { 
               ...node, 
               data: { 
@@ -340,6 +349,41 @@ export function DiagramCanvas({ draggedItem, onDrop: onDropProp, sidebarCollapse
       });
     }
     setEditingNodeId(nodeId);
+  }, [setNodes]);
+
+  const handleChangeColor = useCallback((nodeIds: string[], colorType: 'border' | 'background' | 'text', color: string, hsl: string) => {
+    setNodes((nds) => 
+      nds.map(node => {
+        if (!nodeIds.includes(node.id)) return node;
+        
+        const updatedData = { ...node.data };
+        
+        switch (colorType) {
+          case 'border':
+            updatedData.borderColor = color;
+            updatedData.borderColorHsl = hsl;
+            break;
+          case 'background':
+            updatedData.backgroundColor = color;
+            updatedData.backgroundColorHsl = hsl;
+            break;
+          case 'text':
+            updatedData.textColor = color;
+            updatedData.textColorHsl = hsl;
+            break;
+        }
+        
+        return {
+          ...node,
+          data: updatedData
+        };
+      })
+    );
+    
+    toast({
+      title: "Cores Alteradas",
+      description: `Cor do ${colorType === 'border' ? 'borda' : colorType === 'background' ? 'fundo' : 'texto'} alterada`,
+    });
   }, [setNodes]);
 
   const handleNaturalLanguageDiagram = useCallback((newNodes: Node[], newEdges: Edge[]) => {

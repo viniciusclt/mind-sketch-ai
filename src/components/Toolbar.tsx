@@ -1,5 +1,5 @@
 import { Button } from '@/components/ui/button';
-import { TemplateModal } from './TemplateModal';
+import { TemplateModal } from './TemplateModalWithPreviews';
 import { 
   Square, 
   Circle, 
