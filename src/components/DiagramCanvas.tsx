@@ -21,6 +21,10 @@ import { FloatingArrows } from './FloatingArrows';
 import { NaturalLanguageParser } from './NaturalLanguageParser';
 import { saveDiagramToLocal } from '../utils/offline';
 import { toast } from '@/hooks/use-toast';
+import CustomEdge from './CustomEdge';
+import { EdgeContextMenu } from './EdgeContextMenu';
+import { Swimlanes, useSwimlanesManager } from './Swimlanes';
+import { SwimlanesPanel } from './SwimlanesPanel';
 
 const initialNodes: Node[] = [
   {
@@ -79,6 +83,13 @@ const nodeTypes = {
   custom: CustomNode,
 };
 
+const edgeTypes = {
+  custom: CustomEdge,
+  smoothstep: CustomEdge,
+  straight: CustomEdge,
+  default: CustomEdge,
+};
+
 interface DiagramCanvasProps {
   draggedItem: any;
   onDrop: (position: { x: number; y: number }) => void;
@@ -102,7 +113,16 @@ export function DiagramCanvas({ draggedItem, onDrop: onDropProp, sidebarCollapse
   const [selectedNodes, setSelectedNodes] = useState<Node[]>([]);
   const [editingNodeId, setEditingNodeId] = useState<string | null>(null);
   const [showNLParser, setShowNLParser] = useState(false);
+  const [selectedEdge, setSelectedEdge] = useState<Edge | null>(null);
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
+  
+  // Swimlanes management
+  const { 
+    swimlanes, 
+    addSwimlane, 
+    removeSwimlane, 
+    updateSwimlane 
+  } = useSwimlanesManager();
 
   // Auto-save diagram every 30 seconds
   useEffect(() => {
@@ -386,6 +406,24 @@ export function DiagramCanvas({ draggedItem, onDrop: onDropProp, sidebarCollapse
     });
   }, [setNodes]);
 
+  // Edge handlers
+  const handleUpdateEdge = useCallback((edgeId: string, updates: Partial<Edge>) => {
+    setEdges((eds) => 
+      eds.map(edge => 
+        edge.id === edgeId ? { ...edge, ...updates } : edge
+      )
+    );
+  }, [setEdges]);
+
+  const handleDeleteEdge = useCallback((edgeId: string) => {
+    setEdges((eds) => eds.filter(edge => edge.id !== edgeId));
+  }, [setEdges]);
+
+  const handleEdgeContextMenu = useCallback((event: React.MouseEvent, edge: Edge) => {
+    event.preventDefault();
+    setSelectedEdge(edge);
+  }, []);
+
   const handleNaturalLanguageDiagram = useCallback((newNodes: Node[], newEdges: Edge[]) => {
     setNodes(newNodes);
     setEdges(newEdges);
@@ -431,6 +469,7 @@ export function DiagramCanvas({ draggedItem, onDrop: onDropProp, sidebarCollapse
           onEdgesChange={onEdgesChange}
           onConnect={onConnect}
           nodeTypes={nodeTypes}
+          edgeTypes={edgeTypes}
           fitView
           className="bg-canvas-background"
           style={{ background: 'hsl(var(--canvas-background))' }}
@@ -438,11 +477,19 @@ export function DiagramCanvas({ draggedItem, onDrop: onDropProp, sidebarCollapse
             setSelectedNodes(params.nodes);
           }}
           onNodeContextMenu={handleNodeContextMenu}
+          onEdgeContextMenu={handleEdgeContextMenu}
           multiSelectionKeyCode="Control"
           minZoom={0.1}
           maxZoom={4}
           onPaneClick={() => setSelectedNodes([])}
         >
+          {/* Swimlanes Background */}
+          <Swimlanes 
+            swimlanes={swimlanes} 
+            canvasWidth={window.innerWidth} 
+            canvasHeight={window.innerHeight} 
+          />
+
           <Background 
             variant={BackgroundVariant.Dots} 
             gap={20} 
@@ -490,6 +537,25 @@ export function DiagramCanvas({ draggedItem, onDrop: onDropProp, sidebarCollapse
           <div className="absolute top-4 left-4 z-40">
             <NaturalLanguageParser onDiagramGenerated={handleNaturalLanguageDiagram} />
           </div>
+        )}
+
+        {/* Swimlanes Panel */}
+        <SwimlanesPanel
+          swimlanes={swimlanes}
+          onAddSwimlane={addSwimlane}
+          onRemoveSwimlane={removeSwimlane}
+          onUpdateSwimlane={updateSwimlane}
+        />
+
+        {/* Edge Context Menu */}
+        {selectedEdge && (
+          <EdgeContextMenu
+            edge={selectedEdge}
+            onUpdateEdge={handleUpdateEdge}
+            onDeleteEdge={handleDeleteEdge}
+          >
+            <div />
+          </EdgeContextMenu>
         )}
 
       </div>
