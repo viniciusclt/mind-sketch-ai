@@ -8,7 +8,8 @@ import {
   ZoomOut,
   Move3D,
   Download,
-  FileText
+  FileText,
+  Star
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
@@ -18,9 +19,10 @@ interface QuickActionsProps {
   onCopyNodes?: (nodeIds: string[]) => void;
   onExport?: () => void;
   onToggleNLParser?: () => void;
+  onToggleIconLibrary?: () => void;
 }
 
-export function QuickActions({ selectedNodes = [], onDeleteNodes, onCopyNodes, onExport, onToggleNLParser }: QuickActionsProps) {
+export function QuickActions({ selectedNodes = [], onDeleteNodes, onCopyNodes, onExport, onToggleNLParser, onToggleIconLibrary }: QuickActionsProps) {
   const { toast } = useToast();
 
   const handleDelete = () => {
@@ -55,6 +57,18 @@ export function QuickActions({ selectedNodes = [], onDeleteNodes, onCopyNodes, o
 
   return (
     <div className="fixed bottom-4 right-4 bg-card border border-border rounded-lg shadow-card p-2 flex gap-1 z-10">
+      {onToggleIconLibrary && (
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-8 w-8 p-0"
+          onClick={onToggleIconLibrary}
+          title="Icon Library"
+        >
+          <Star className="h-4 w-4" />
+        </Button>
+      )}
+      
       {onToggleNLParser && (
         <Button
           variant="ghost"

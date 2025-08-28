@@ -25,6 +25,8 @@ import CustomEdge from './CustomEdge';
 import { EdgeContextMenu } from './EdgeContextMenu';
 import { Swimlanes, useSwimlanesManager } from './Swimlanes';
 import { SwimlanesPanel } from './SwimlanesPanel';
+import { LayersManager, useLayersManager } from './LayersManager';
+import { IconLibrary } from './IconLibrary';
 
 const initialNodes: Node[] = [
   {
@@ -114,6 +116,7 @@ export function DiagramCanvas({ draggedItem, onDrop: onDropProp, sidebarCollapse
   const [editingNodeId, setEditingNodeId] = useState<string | null>(null);
   const [showNLParser, setShowNLParser] = useState(false);
   const [selectedEdge, setSelectedEdge] = useState<Edge | null>(null);
+  const [showIconLibrary, setShowIconLibrary] = useState(false);
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
   
   // Swimlanes management
@@ -123,6 +126,20 @@ export function DiagramCanvas({ draggedItem, onDrop: onDropProp, sidebarCollapse
     removeSwimlane, 
     updateSwimlane 
   } = useSwimlanesManager();
+
+  // Layers management
+  const {
+    layers,
+    addLayer,
+    removeLayer,
+    updateLayer,
+    toggleLayerVisibility,
+    moveLayer,
+    groupNodes,
+    ungroupNodes,
+    getLayerForNode,
+    getVisibleNodeIds,
+  } = useLayersManager();
 
   // Auto-save diagram every 30 seconds
   useEffect(() => {
@@ -452,6 +469,33 @@ export function DiagramCanvas({ draggedItem, onDrop: onDropProp, sidebarCollapse
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [selectedNodes, handleEditLabel, handleDeleteNodes]);
 
+  // Filter nodes based on layer visibility
+  const visibleNodeIds = getVisibleNodeIds();
+  const filteredNodes = nodes.filter(node => {
+    const layer = getLayerForNode(node.id);
+    return !layer || visibleNodeIds.has(node.id);
+  });
+
+  // Apply layer styling to nodes
+  const styledNodes = filteredNodes.map(node => {
+    const layer = getLayerForNode(node.id);
+    if (layer) {
+      return {
+        ...node,
+        style: {
+          ...node.style,
+          zIndex: layer.zIndex,
+          opacity: layer.visible ? 1 : 0.3,
+        },
+        data: {
+          ...node.data,
+          layerColor: layer.color,
+        }
+      };
+    }
+    return node;
+  });
+
   return (
     <DiagramProvider addConnectedNode={addConnectedNode}>
       <div 
@@ -463,7 +507,7 @@ export function DiagramCanvas({ draggedItem, onDrop: onDropProp, sidebarCollapse
         onDragOver={onDragOver}
       >
         <ReactFlow
-          nodes={nodes}
+          nodes={styledNodes}
           edges={edges}
           onNodesChange={onNodesChange}
           onEdgesChange={onEdgesChange}
@@ -531,6 +575,7 @@ export function DiagramCanvas({ draggedItem, onDrop: onDropProp, sidebarCollapse
           onCopyNodes={handleCopyNodes}
           onExport={handleExport}
           onToggleNLParser={() => setShowNLParser(!showNLParser)}
+          onToggleIconLibrary={() => setShowIconLibrary(!showIconLibrary)}
         />
 
         {showNLParser && (
@@ -547,15 +592,49 @@ export function DiagramCanvas({ draggedItem, onDrop: onDropProp, sidebarCollapse
           onUpdateSwimlane={updateSwimlane}
         />
 
-        {/* Edge Context Menu */}
-        {selectedEdge && (
-          <EdgeContextMenu
-            edge={selectedEdge}
-            onUpdateEdge={handleUpdateEdge}
-            onDeleteEdge={handleDeleteEdge}
-          >
-            <div />
-          </EdgeContextMenu>
+        {/* Layers Manager */}
+        <LayersManager
+          layers={layers}
+          nodes={nodes}
+          selectedNodes={selectedNodes.map(node => node.id)}
+          onAddLayer={addLayer}
+          onRemoveLayer={removeLayer}
+          onUpdateLayer={updateLayer}
+          onToggleLayerVisibility={toggleLayerVisibility}
+          onMoveLayer={moveLayer}
+          onGroupNodes={groupNodes}
+          onUngroupNodes={ungroupNodes}
+        />
+
+        {/* Icon Library */}
+        {showIconLibrary && (
+          <IconLibrary
+            onSelectIcon={(iconName, IconComponent) => {
+              // Handle icon selection for nodes
+              if (selectedNodes.length > 0) {
+                setNodes((nds) =>
+                  nds.map(node =>
+                    selectedNodes.some(selected => selected.id === node.id)
+                      ? { 
+                          ...node, 
+                          data: { 
+                            ...node.data, 
+                            icon: iconName,
+                            IconComponent 
+                          } 
+                        }
+                      : node
+                  )
+                );
+                toast({
+                  title: "Ícone Adicionado",
+                  description: `Ícone ${iconName} adicionado aos nós selecionados`,
+                });
+              }
+              setShowIconLibrary(false);
+            }}
+            onClose={() => setShowIconLibrary(false)}
+          />
         )}
 
       </div>
