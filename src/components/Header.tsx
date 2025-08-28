@@ -1,4 +1,5 @@
 import { Button } from '@/components/ui/button';
+import { SettingsModal } from '@/components/SettingsModal';
 import { 
   Save, 
   Download, 
@@ -96,9 +97,7 @@ export function Header({
           <Share2 className="h-4 w-4 mr-2" />
           Share
         </Button>
-        <Button variant="ghost" size="sm">
-          <Settings className="h-4 w-4" />
-        </Button>
+        <SettingsModal />
       </div>
     </header>
   );

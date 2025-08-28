@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { Header } from '@/components/Header';
 import { Toolbar } from '@/components/Toolbar';
 import { Sidebar } from '@/components/Sidebar';
@@ -16,6 +16,7 @@ const Index = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [draggedItem, setDraggedItem] = useState(null);
   const [templateToApply, setTemplateToApply] = useState<any>(null);
+  const autoHideTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
   const {
     state: diagramState,
@@ -31,7 +32,27 @@ const Index = () => {
 
   const handleToggleSidebar = useCallback(() => {
     setSidebarCollapsed(prev => !prev);
+    
+    // Clear any existing auto-hide timeout when manually toggling
+    if (autoHideTimeoutRef.current) {
+      clearTimeout(autoHideTimeoutRef.current);
+      autoHideTimeoutRef.current = null;
+    }
   }, []);
+
+  const handleSidebarActivity = useCallback(() => {
+    // Clear existing timeout
+    if (autoHideTimeoutRef.current) {
+      clearTimeout(autoHideTimeoutRef.current);
+    }
+    
+    // Only auto-hide if sidebar is open
+    if (!sidebarCollapsed) {
+      autoHideTimeoutRef.current = setTimeout(() => {
+        setSidebarCollapsed(true);
+      }, 3000); // Auto-hide after 3 seconds of inactivity
+    }
+  }, [sidebarCollapsed]);
 
   const handleDragStart = useCallback((item: any) => {
     setDraggedItem(item);
@@ -46,6 +67,21 @@ const Index = () => {
   const handleApplyTemplate = useCallback((template: any) => {
     setTemplateToApply(template);
   }, []);
+
+  // Auto-hide sidebar setup
+  useEffect(() => {
+    // Start auto-hide timer when sidebar is opened
+    if (!sidebarCollapsed) {
+      handleSidebarActivity();
+    }
+
+    // Cleanup on unmount
+    return () => {
+      if (autoHideTimeoutRef.current) {
+        clearTimeout(autoHideTimeoutRef.current);
+      }
+    };
+  }, [sidebarCollapsed, handleSidebarActivity]);
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -88,10 +124,15 @@ const Index = () => {
         onApplyTemplate={handleApplyTemplate}
       />
       <div className="flex flex-1 overflow-hidden relative">
-        <Sidebar 
-          collapsed={sidebarCollapsed} 
-          onDragStart={handleDragStart}
-        />
+        <div 
+          onMouseEnter={handleSidebarActivity}
+          onMouseMove={handleSidebarActivity}
+        >
+          <Sidebar 
+            collapsed={sidebarCollapsed} 
+            onDragStart={handleDragStart}
+          />
+        </div>
         {!sidebarCollapsed && (
           <div 
             className="fixed inset-0 bg-black/20 z-5 md:hidden"
