@@ -105,7 +105,7 @@ export function LayersManager({
         variant="outline"
         size="sm"
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-20 right-4 z-30 shadow-lg"
+        className="fixed bottom-20 right-4 z-10 shadow-lg"
       >
         <Layers className="h-4 w-4 mr-2" />
         Layers
@@ -114,7 +114,7 @@ export function LayersManager({
   }
 
   return (
-    <Card className="fixed bottom-20 right-4 z-30 w-80 shadow-lg max-h-96 overflow-hidden">
+    <Card className="fixed bottom-20 right-4 z-20 w-80 shadow-lg max-h-96 overflow-hidden">
       <CardHeader className="pb-3">
         <CardTitle className="text-sm flex items-center justify-between">
           <div className="flex items-center">
