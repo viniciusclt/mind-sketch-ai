@@ -21,6 +21,29 @@ interface SidebarProps {
 export function Sidebar({ collapsed, onDragStart }: SidebarProps) {
   const [activeSection, setActiveSection] = useState('shapes');
 
+  const handleDragStart = (event: React.DragEvent<HTMLDivElement>, item: any, type: string) => {
+    event.dataTransfer.setData('application/reactflow', JSON.stringify({ item, type }));
+    event.dataTransfer.effectAllowed = 'move';
+    
+    // Create drag image for better visual feedback
+    const dragElement = event.currentTarget.cloneNode(true) as HTMLElement;
+    dragElement.style.transform = 'rotate(5deg)';
+    dragElement.style.opacity = '0.8';
+    dragElement.style.position = 'absolute';
+    dragElement.style.top = '-1000px';
+    document.body.appendChild(dragElement);
+    event.dataTransfer.setDragImage(dragElement, 0, 0);
+    
+    // Clean up after drag
+    setTimeout(() => {
+      if (document.body.contains(dragElement)) {
+        document.body.removeChild(dragElement);
+      }
+    }, 0);
+    
+    onDragStart({ item, type });
+  };
+
   const sections = [
     {
       id: 'shapes',
@@ -107,9 +130,9 @@ export function Sidebar({ collapsed, onDragStart }: SidebarProps) {
                     {section.items.map((item, index) => (
                       <div
                         key={index}
-                        className="flex items-center gap-3 p-2 rounded-md hover:bg-sidebar-accent cursor-pointer transition-colors group"
+                        className="flex items-center gap-3 p-2 rounded-md hover:bg-sidebar-accent cursor-move transition-all duration-200 group hover:shadow-md hover:scale-105 active:scale-95"
                         draggable
-                        onDragStart={() => onDragStart({ type: section.id, item })}
+                        onDragStart={(e) => handleDragStart(e, item, section.id)}
                       >
                         <div className="flex-shrink-0 w-8 h-8 bg-primary-light rounded flex items-center justify-center text-sm">
                           {item.preview}

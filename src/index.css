@@ -149,7 +149,11 @@ All colors MUST be HSL.
   }
   
   .react-flow__minimap {
-    display: none;
+    width: 120px !important;
+    height: 80px !important;
+    bottom: 20px !important;
+    left: 20px !important;
+    right: auto !important;
   }
 }
 
@@ -182,4 +186,46 @@ All colors MUST be HSL.
     width: 12px !important;
     height: 12px !important;
   }
+  
+  /* Better touch targets for mobile */
+  .react-flow__controls button {
+    width: 44px !important;
+    height: 44px !important;
+    font-size: 18px !important;
+  }
+  
+  /* Context menu adjustments for mobile */
+  .node-context-menu {
+    min-width: 250px;
+    font-size: 16px;
+  }
+  
+  .node-context-menu button {
+    min-height: 44px;
+    padding: 12px;
+  }
+}
+
+/* Dragging states */
+.react-flow__node.dragging {
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  transform: scale(1.05);
+}
+
+.react-flow__node.selected {
+  outline: 2px solid hsl(var(--primary));
+  outline-offset: 2px;
+}
+
+/* Enhanced minimap styling */
+.react-flow__minimap {
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: var(--shadow-card);
+}
+
+.react-flow__minimap-mask {
+  fill: hsl(var(--primary) / 0.1);
+  stroke: hsl(var(--primary));
+  stroke-width: 2;
 }

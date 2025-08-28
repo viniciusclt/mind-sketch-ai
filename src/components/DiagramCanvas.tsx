@@ -17,7 +17,9 @@ import '@xyflow/react/dist/style.css';
 import { CustomNode } from './CustomNode';
 import { DiagramProvider } from '../contexts/DiagramContext';
 import { QuickActions } from './QuickActions';
+import { NodeContextMenu } from './NodeContextMenu';
 import { saveDiagramToLocal } from '../utils/offline';
+import { toast } from '@/hooks/use-toast';
 
 const initialNodes: Node[] = [
   {
@@ -93,7 +95,9 @@ interface DiagramCanvasProps {
 export function DiagramCanvas({ draggedItem, onDrop: onDropProp, sidebarCollapsed, templateToApply }: DiagramCanvasProps) {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
-  const [selectedNodes, setSelectedNodes] = useState<string[]>([]);
+  const [selectedNodes, setSelectedNodes] = useState<Node[]>([]);
+  const [contextMenuPosition, setContextMenuPosition] = useState<{ x: number; y: number } | null>(null);
+  const [editingNodeId, setEditingNodeId] = useState<string | null>(null);
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
 
   // Auto-save diagram every 30 seconds
@@ -173,30 +177,48 @@ export function DiagramCanvas({ draggedItem, onDrop: onDropProp, sidebarCollapse
   const onDropHandler = useCallback(
     (event: React.DragEvent) => {
       event.preventDefault();
-      if (!draggedItem || !reactFlowWrapper.current) return;
+      if (!reactFlowWrapper.current) return;
 
       const reactFlowBounds = reactFlowWrapper.current.getBoundingClientRect();
+      const dragData = event.dataTransfer.getData('application/reactflow');
+      
+      if (!dragData) return;
+
+      let parsedData;
+      try {
+        parsedData = JSON.parse(dragData);
+      } catch (e) {
+        // Fallback for old drag format
+        if (!draggedItem) return;
+        parsedData = { item: draggedItem.item, type: draggedItem.type };
+      }
+
       const position = {
         x: event.clientX - reactFlowBounds.left,
         y: event.clientY - reactFlowBounds.top,
       };
 
       const newNode: Node = {
-        id: `${draggedItem.type}-${Date.now()}`,
+        id: `${parsedData.type}-${Date.now()}`,
         type: 'custom',
         position,
         data: { 
-          label: draggedItem.item.name,
-          nodeType: draggedItem.type,
-          shape: draggedItem.item.name.toLowerCase(),
-          preview: draggedItem.item.preview
+          label: parsedData.item.name,
+          nodeType: parsedData.type,
+          shape: parsedData.item.name.toLowerCase(),
+          preview: parsedData.item.preview
         },
       };
 
       setNodes((nds) => nds.concat(newNode));
       onDropProp(position);
+
+      toast({
+        title: "Node Added",
+        description: `Added ${parsedData.item.name} to canvas`,
+      });
     },
-    [draggedItem, setNodes, onDropProp]
+    [setNodes, onDropProp, draggedItem]
   );
 
   const handleDeleteNodes = useCallback((nodeIds: string[]) => {
@@ -224,6 +246,76 @@ export function DiagramCanvas({ draggedItem, onDrop: onDropProp, sidebarCollapse
     URL.revokeObjectURL(url);
   }, [nodes, edges]);
 
+  const handleNodeContextMenu = useCallback((event: React.MouseEvent, node: Node) => {
+    event.preventDefault();
+    setContextMenuPosition({ x: event.clientX, y: event.clientY });
+    setSelectedNodes([node]);
+  }, []);
+
+  const handleChangeShape = useCallback((nodeId: string, newShape: string) => {
+    const shapes = [
+      { name: 'rectangle', preview: '▭' },
+      { name: 'circle', preview: '●' },
+      { name: 'diamond', preview: '◆' },
+      { name: 'triangle', preview: '▲' },
+    ];
+    
+    setNodes((nds) => 
+      nds.map(node => 
+        node.id === nodeId 
+          ? { 
+              ...node, 
+              data: { 
+                ...node.data, 
+                shape: newShape,
+                preview: shapes.find(s => s.name === newShape)?.preview || '▭'
+              } 
+            }
+          : node
+      )
+    );
+    toast({
+      title: "Shape Changed",
+      description: `Changed to ${newShape}`,
+    });
+  }, [setNodes]);
+
+  const handleEditLabel = useCallback((nodeId: string) => {
+    const newLabel = prompt('Enter new label:');
+    if (newLabel !== null) {
+      setNodes((nds) => 
+        nds.map(node => 
+          node.id === nodeId 
+            ? { ...node, data: { ...node.data, label: newLabel } }
+            : node
+        )
+      );
+      toast({
+        title: "Label Updated",
+        description: `Node label changed to "${newLabel}"`,
+      });
+    }
+    setEditingNodeId(nodeId);
+  }, []);
+
+  // Add keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      // Edit selected node with F2 or Enter
+      if ((event.key === 'F2' || event.key === 'Enter') && selectedNodes.length === 1) {
+        handleEditLabel(selectedNodes[0].id);
+      }
+      
+      // Delete selected nodes with Delete key
+      if (event.key === 'Delete' && selectedNodes.length > 0) {
+        handleDeleteNodes(selectedNodes.map(node => node.id));
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [selectedNodes, handleEditLabel, handleDeleteNodes]);
+
   return (
     <DiagramProvider addConnectedNode={addConnectedNode}>
       <div 
@@ -245,13 +337,16 @@ export function DiagramCanvas({ draggedItem, onDrop: onDropProp, sidebarCollapse
           className="bg-canvas-background"
           style={{ background: 'hsl(var(--canvas-background))' }}
           onSelectionChange={(params) => {
-            setSelectedNodes(params.nodes.map(node => node.id));
+            setSelectedNodes(params.nodes);
+            if (params.nodes.length === 0) {
+              setContextMenuPosition(null);
+            }
           }}
-          onNodeContextMenu={(event, node) => {
-            event.preventDefault();
-            console.log('Right click on node:', node.id);
-          }}
+          onNodeContextMenu={handleNodeContextMenu}
           multiSelectionKeyCode="Control"
+          minZoom={0.1}
+          maxZoom={4}
+          onPaneClick={() => setContextMenuPosition(null)}
         >
           <Background 
             variant={BackgroundVariant.Dots} 
@@ -261,6 +356,9 @@ export function DiagramCanvas({ draggedItem, onDrop: onDropProp, sidebarCollapse
           />
           <Controls 
             className="bg-card border border-border rounded-lg shadow-card"
+            showZoom={true}
+            showFitView={true}
+            showInteractive={true}
           />
           <MiniMap 
             className="bg-card border border-border rounded-lg shadow-card"
@@ -274,10 +372,19 @@ export function DiagramCanvas({ draggedItem, onDrop: onDropProp, sidebarCollapse
         </ReactFlow>
         
         <QuickActions 
-          selectedNodes={selectedNodes}
+          selectedNodes={selectedNodes.map(node => node.id)}
           onDeleteNodes={handleDeleteNodes}
           onCopyNodes={handleCopyNodes}
           onExport={handleExport}
+        />
+
+        <NodeContextMenu
+          selectedNodes={selectedNodes}
+          onAddConnectedNode={addConnectedNode}
+          onChangeShape={handleChangeShape}
+          onEditLabel={handleEditLabel}
+          position={contextMenuPosition}
+          onClose={() => setContextMenuPosition(null)}
         />
       </div>
     </DiagramProvider>
