@@ -1,13 +1,33 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { Header } from '@/components/Header';
 import { Toolbar } from '@/components/Toolbar';
 import { Sidebar } from '@/components/Sidebar';
 import { DiagramCanvas } from '@/components/DiagramCanvas';
+import { useUndoableState } from '@/hooks/useUndoableState';
+import { Node, Edge } from '@xyflow/react';
+
+interface DiagramState {
+  nodes: Node[];
+  edges: Edge[];
+}
 
 const Index = () => {
   const [activeTool, setActiveTool] = useState('select');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [draggedItem, setDraggedItem] = useState(null);
+  const [templateToApply, setTemplateToApply] = useState<any>(null);
+  
+  const {
+    state: diagramState,
+    set: setDiagramState,
+    undo,
+    redo,
+    canUndo,
+    canRedo
+  } = useUndoableState<DiagramState>({
+    nodes: [],
+    edges: []
+  });
 
   const handleToggleSidebar = useCallback(() => {
     setSidebarCollapsed(prev => !prev);
@@ -19,20 +39,49 @@ const Index = () => {
 
   const handleDrop = useCallback((position: { x: number; y: number }) => {
     if (draggedItem) {
-      // This will be handled by DiagramCanvas
       setDraggedItem(null);
     }
   }, [draggedItem]);
 
   const handleApplyTemplate = useCallback((template: any) => {
-    // Apply template nodes and edges to the canvas
-    console.log('Applying template:', template);
-    // This would set the nodes and edges from the template
+    setTemplateToApply(template);
   }, []);
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.ctrlKey || event.metaKey) {
+        switch (event.key) {
+          case 'z':
+            event.preventDefault();
+            if (event.shiftKey) {
+              redo();
+            } else {
+              undo();
+            }
+            break;
+          case 'y':
+            event.preventDefault();
+            redo();
+            break;
+        }
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [undo, redo]);
 
   return (
     <div className="h-screen flex flex-col bg-background overflow-hidden">
-      <Header sidebarCollapsed={sidebarCollapsed} onToggleSidebar={handleToggleSidebar} />
+      <Header 
+        sidebarCollapsed={sidebarCollapsed} 
+        onToggleSidebar={handleToggleSidebar}
+        onUndo={undo}
+        onRedo={redo}
+        canUndo={canUndo}
+        canRedo={canRedo}
+      />
       <Toolbar 
         activeTool={activeTool} 
         onToolChange={setActiveTool}
@@ -53,6 +102,7 @@ const Index = () => {
           draggedItem={draggedItem}
           onDrop={handleDrop}
           sidebarCollapsed={sidebarCollapsed}
+          templateToApply={templateToApply}
         />
       </div>
     </div>

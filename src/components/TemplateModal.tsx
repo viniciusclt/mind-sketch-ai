@@ -71,9 +71,16 @@ interface TemplateModalProps {
 
 export function TemplateModal({ onApplyTemplate }: TemplateModalProps) {
   const [selectedTemplate, setSelectedTemplate] = useState<any>(null);
+  const [open, setOpen] = useState(false);
+
+  const handleApplyTemplate = (template: any) => {
+    onApplyTemplate(template);
+    setOpen(false);
+    setSelectedTemplate(null);
+  };
 
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button variant="outline" size="sm" className="gap-2">
           <LayoutTemplate className="h-4 w-4" />
@@ -110,7 +117,7 @@ export function TemplateModal({ onApplyTemplate }: TemplateModalProps) {
                 </div>
                 {selectedTemplate?.id === template.id && (
                   <Button
-                    onClick={() => onApplyTemplate(template)}
+                    onClick={() => handleApplyTemplate(template)}
                     className="w-full mt-3"
                     size="sm"
                   >

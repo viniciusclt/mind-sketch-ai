@@ -15,9 +15,20 @@ import {
 interface HeaderProps {
   sidebarCollapsed: boolean;
   onToggleSidebar: () => void;
+  onUndo?: () => void;
+  onRedo?: () => void;
+  canUndo?: boolean;
+  canRedo?: boolean;
 }
 
-export function Header({ sidebarCollapsed, onToggleSidebar }: HeaderProps) {
+export function Header({ 
+  sidebarCollapsed, 
+  onToggleSidebar, 
+  onUndo, 
+  onRedo, 
+  canUndo = false, 
+  canRedo = false 
+}: HeaderProps) {
   return (
     <header className="h-14 bg-card border-b border-border flex items-center justify-between px-4 shadow-card">
       <div className="flex items-center gap-4">
@@ -45,10 +56,22 @@ export function Header({ sidebarCollapsed, onToggleSidebar }: HeaderProps) {
         <div className="w-px h-6 bg-border mx-2" />
         
         <div className="flex items-center gap-1">
-          <Button variant="ghost" size="sm">
+          <Button 
+            variant="ghost" 
+            size="sm"
+            onClick={onUndo}
+            disabled={!canUndo}
+            title="Undo (Ctrl+Z)"
+          >
             <Undo className="h-4 w-4" />
           </Button>
-          <Button variant="ghost" size="sm">
+          <Button 
+            variant="ghost" 
+            size="sm"
+            onClick={onRedo}
+            disabled={!canRedo}
+            title="Redo (Ctrl+Y)"
+          >
             <Redo className="h-4 w-4" />
           </Button>
         </div>
