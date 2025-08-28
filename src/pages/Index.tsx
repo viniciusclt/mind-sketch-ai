@@ -4,7 +4,10 @@ import { Toolbar } from '@/components/Toolbar';
 import { Sidebar } from '@/components/Sidebar';
 import { DiagramCanvas } from '@/components/DiagramCanvas';
 import { useUndoableState } from '@/hooks/useUndoableState';
+import { useFullscreen } from '@/hooks/useFullscreen';
 import { Node, Edge } from '@xyflow/react';
+import { Button } from '@/components/ui/button';
+import { X } from 'lucide-react';
 
 interface DiagramState {
   nodes: Node[];
@@ -17,6 +20,7 @@ const Index = () => {
   const [draggedItem, setDraggedItem] = useState(null);
   const [templateToApply, setTemplateToApply] = useState<any>(null);
   const autoHideTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const { isFullscreen, toggleFullscreen, exitFullscreen } = useFullscreen();
   
   const {
     state: diagramState,
@@ -110,30 +114,51 @@ const Index = () => {
 
   return (
     <div className="h-screen flex flex-col bg-background overflow-hidden">
-      <Header 
-        sidebarCollapsed={sidebarCollapsed} 
-        onToggleSidebar={handleToggleSidebar}
-        onUndo={undo}
-        onRedo={redo}
-        canUndo={canUndo}
-        canRedo={canRedo}
-      />
-      <Toolbar 
-        activeTool={activeTool} 
-        onToolChange={setActiveTool}
-        onApplyTemplate={handleApplyTemplate}
-      />
-      <div className="flex flex-1 overflow-hidden relative">
-        <div 
-          onMouseEnter={handleSidebarActivity}
-          onMouseMove={handleSidebarActivity}
-        >
-          <Sidebar 
-            collapsed={sidebarCollapsed} 
-            onDragStart={handleDragStart}
+      {!isFullscreen && (
+        <>
+          <Header 
+            sidebarCollapsed={sidebarCollapsed} 
+            onToggleSidebar={handleToggleSidebar}
+            onUndo={undo}
+            onRedo={redo}
+            canUndo={canUndo}
+            canRedo={canRedo}
+            isFullscreen={isFullscreen}
+            onToggleFullscreen={toggleFullscreen}
           />
-        </div>
-        {!sidebarCollapsed && (
+          <Toolbar 
+            activeTool={activeTool} 
+            onToolChange={setActiveTool}
+            onApplyTemplate={handleApplyTemplate}
+          />
+        </>
+      )}
+      
+      {isFullscreen && (
+        <Button
+          variant="secondary"
+          size="sm"
+          className="fixed top-4 right-4 z-50 h-10 w-10 p-0 rounded-full shadow-lg"
+          onClick={exitFullscreen}
+          title="Exit Fullscreen (ESC)"
+        >
+          <X className="h-4 w-4" />
+        </Button>
+      )}
+      
+      <div className={`flex flex-1 overflow-hidden relative ${isFullscreen ? 'h-screen' : ''}`}>
+        {!isFullscreen && (
+          <div 
+            onMouseEnter={handleSidebarActivity}
+            onMouseMove={handleSidebarActivity}
+          >
+            <Sidebar 
+              collapsed={sidebarCollapsed} 
+              onDragStart={handleDragStart}
+            />
+          </div>
+        )}
+        {!sidebarCollapsed && !isFullscreen && (
           <div 
             className="fixed inset-0 bg-black/20 z-5 md:hidden"
             onClick={handleToggleSidebar}
@@ -142,8 +167,9 @@ const Index = () => {
         <DiagramCanvas 
           draggedItem={draggedItem}
           onDrop={handleDrop}
-          sidebarCollapsed={sidebarCollapsed}
+          sidebarCollapsed={sidebarCollapsed || isFullscreen}
           templateToApply={templateToApply}
+          isFullscreen={isFullscreen}
         />
       </div>
     </div>

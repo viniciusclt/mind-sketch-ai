@@ -17,7 +17,7 @@ import '@xyflow/react/dist/style.css';
 import { CustomNode } from './CustomNode';
 import { DiagramProvider } from '../contexts/DiagramContext';
 import { QuickActions } from './QuickActions';
-import { NodeContextMenu } from './NodeContextMenu';
+import { FloatingArrows } from './FloatingArrows';
 import { NaturalLanguageParser } from './NaturalLanguageParser';
 import { saveDiagramToLocal } from '../utils/offline';
 import { toast } from '@/hooks/use-toast';
@@ -84,6 +84,7 @@ interface DiagramCanvasProps {
   onDrop: (position: { x: number; y: number }) => void;
   sidebarCollapsed: boolean;
   templateToApply?: any;
+  isFullscreen?: boolean;
 }
 
 const shapes = [
@@ -95,11 +96,10 @@ const shapes = [
   { name: 'ellipse', preview: '⬭' },
 ];
 
-export function DiagramCanvas({ draggedItem, onDrop: onDropProp, sidebarCollapsed, templateToApply }: DiagramCanvasProps) {
+export function DiagramCanvas({ draggedItem, onDrop: onDropProp, sidebarCollapsed, templateToApply, isFullscreen = false }: DiagramCanvasProps) {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
   const [selectedNodes, setSelectedNodes] = useState<Node[]>([]);
-  const [contextMenuPosition, setContextMenuPosition] = useState<{ x: number; y: number } | null>(null);
   const [editingNodeId, setEditingNodeId] = useState<string | null>(null);
   const [showNLParser, setShowNLParser] = useState(false);
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
@@ -252,7 +252,6 @@ export function DiagramCanvas({ draggedItem, onDrop: onDropProp, sidebarCollapse
 
   const handleNodeContextMenu = useCallback((event: React.MouseEvent, node: Node) => {
     event.preventDefault();
-    setContextMenuPosition({ x: event.clientX, y: event.clientY });
     setSelectedNodes([node]);
   }, []);
 
@@ -345,26 +344,12 @@ export function DiagramCanvas({ draggedItem, onDrop: onDropProp, sidebarCollapse
           style={{ background: 'hsl(var(--canvas-background))' }}
           onSelectionChange={(params) => {
             setSelectedNodes(params.nodes);
-            if (params.nodes.length === 0) {
-              setContextMenuPosition(null);
-            } else if (params.nodes.length === 1) {
-              // Show context menu for single node selection
-              const node = params.nodes[0];
-              const nodeElement = document.querySelector(`[data-id="${node.id}"]`);
-              if (nodeElement) {
-                const rect = nodeElement.getBoundingClientRect();
-                setContextMenuPosition({
-                  x: rect.right + 10,
-                  y: rect.top
-                });
-              }
-            }
           }}
           onNodeContextMenu={handleNodeContextMenu}
           multiSelectionKeyCode="Control"
           minZoom={0.1}
           maxZoom={4}
-          onPaneClick={() => setContextMenuPosition(null)}
+          onPaneClick={() => setSelectedNodes([])}
         >
           <Background 
             variant={BackgroundVariant.Dots} 
@@ -379,15 +364,27 @@ export function DiagramCanvas({ draggedItem, onDrop: onDropProp, sidebarCollapse
             showInteractive={true}
           />
           <MiniMap 
-            className="bg-card border border-border rounded-lg shadow-card"
+            className="!w-52 !h-40 bg-card border border-border rounded-lg shadow-card"
             style={{
               backgroundColor: 'hsl(var(--card))',
               border: '1px solid hsl(var(--border))',
+              width: '220px',
+              height: '160px'
             }}
             nodeColor="hsl(var(--primary))"
-            maskColor="hsl(var(--muted) / 0.8)"
+            maskColor="hsl(var(--muted) / 0.6)"
+            pannable
+            zoomable
           />
         </ReactFlow>
+        
+        {/* Floating Arrows for single node selection */}
+        {selectedNodes.length === 1 && (
+          <FloatingArrows
+            selectedNode={selectedNodes[0]}
+            onAddConnectedNode={addConnectedNode}
+          />
+        )}
         
         <QuickActions 
           selectedNodes={selectedNodes.map(node => node.id)}
@@ -403,14 +400,6 @@ export function DiagramCanvas({ draggedItem, onDrop: onDropProp, sidebarCollapse
           </div>
         )}
 
-        <NodeContextMenu
-          selectedNodes={selectedNodes}
-          onAddConnectedNode={addConnectedNode}
-          onChangeShape={handleChangeShape}
-          onEditLabel={handleEditLabel}
-          position={contextMenuPosition}
-          onClose={() => setContextMenuPosition(null)}
-        />
       </div>
     </DiagramProvider>
   );

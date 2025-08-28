@@ -226,12 +226,22 @@ All colors MUST be HSL.
   border-radius: 8px;
   overflow: hidden;
   box-shadow: var(--shadow-card);
+  width: 220px !important;
+  height: 160px !important;
+  background: hsl(var(--card)) !important;
+  border: 1px solid hsl(var(--border)) !important;
 }
 
 .react-flow__minimap-mask {
   fill: hsl(var(--primary) / 0.1);
   stroke: hsl(var(--primary));
   stroke-width: 2;
+}
+
+.react-flow__minimap .react-flow__minimap-node {
+  fill: hsl(var(--primary)) !important;
+  stroke: hsl(var(--primary-foreground)) !important;
+  stroke-width: 1px !important;
 }
 
 /* React Flow Node Customizations */

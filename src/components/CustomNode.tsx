@@ -22,7 +22,7 @@ export const CustomNode = memo(({ data, id }: NodeProps) => {
       case 'circle':
         return `${baseStyle} rounded-full w-20 h-20`;
       case 'diamond':
-        return `${baseStyle} transform rotate-45 w-16 h-16`;
+        return `${baseStyle} bg-transparent border-transparent w-20 h-20`;
       case 'triangle':
         return `${baseStyle} bg-transparent border-transparent`;
       case 'hexagon':
@@ -62,8 +62,16 @@ export const CustomNode = memo(({ data, id }: NodeProps) => {
     
     if (nodeData.shape === 'diamond') {
       return (
-        <div className="transform -rotate-45 flex items-center justify-center w-full h-full">
-          <span className="text-xs">{nodeData.label}</span>
+        <div className="relative w-20 h-20 flex items-center justify-center">
+          <div 
+            className="w-20 h-20 bg-primary border-2 border-border" 
+            style={{
+              clipPath: 'polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)'
+            }} 
+          />
+          <span className="absolute inset-0 flex items-center justify-center text-xs text-primary-foreground font-medium">
+            {nodeData.label}
+          </span>
         </div>
       );
     }

@@ -10,7 +10,9 @@ import {
   Menu,
   FileText,
   PanelLeftClose,
-  PanelLeft
+  PanelLeft,
+  Maximize,
+  Minimize
 } from 'lucide-react';
 
 interface HeaderProps {
@@ -20,6 +22,8 @@ interface HeaderProps {
   onRedo?: () => void;
   canUndo?: boolean;
   canRedo?: boolean;
+  isFullscreen?: boolean;
+  onToggleFullscreen?: () => void;
 }
 
 export function Header({ 
@@ -28,7 +32,9 @@ export function Header({
   onUndo, 
   onRedo, 
   canUndo = false, 
-  canRedo = false 
+  canRedo = false,
+  isFullscreen = false,
+  onToggleFullscreen
 }: HeaderProps) {
   return (
     <header className="h-14 bg-card border-b border-border flex items-center justify-between px-4 shadow-card">
@@ -75,6 +81,16 @@ export function Header({
           >
             <Redo className="h-4 w-4" />
           </Button>
+          {onToggleFullscreen && (
+            <Button 
+              variant="ghost" 
+              size="sm"
+              onClick={onToggleFullscreen}
+              title={isFullscreen ? "Exit Fullscreen (F11)" : "Fullscreen (F11)"}
+            >
+              {isFullscreen ? <Minimize className="h-4 w-4" /> : <Maximize className="h-4 w-4" />}
+            </Button>
+          )}
         </div>
       </div>
 
