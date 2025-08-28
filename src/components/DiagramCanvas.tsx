@@ -70,8 +70,8 @@ const initialEdges: Edge[] = [
     id: 'e1-2',
     source: '1',
     target: '2',
-    type: 'smoothstep',
-    data: { edgeType: 'free' },
+    type: 'step',
+    data: { edgeType: 'step' },
     markerEnd: { type: 'arrowclosed' },
     style: { stroke: 'hsl(var(--primary))', strokeWidth: 2 },
   },
@@ -79,8 +79,8 @@ const initialEdges: Edge[] = [
     id: 'e1-3',
     source: '1',
     target: '3',
-    type: 'smoothstep',
-    data: { edgeType: 'free' },
+    type: 'step',
+    data: { edgeType: 'step' },
     markerEnd: { type: 'arrowclosed' },
     style: { stroke: 'hsl(var(--primary))', strokeWidth: 2 },
   },
@@ -173,8 +173,8 @@ export function DiagramCanvas({ draggedItem, onDrop: onDropProp, sidebarCollapse
   const onConnect = useCallback(
     (params: Connection) => setEdges((eds) => addEdge({
       ...params,
-      type: 'smoothstep',
-      data: { edgeType: 'free' },
+      type: 'step',
+      data: { edgeType: 'step' },
       markerEnd: { type: 'arrowclosed' },
       style: { stroke: 'hsl(var(--primary))', strokeWidth: 2 }
     }, eds)),
@@ -255,8 +255,8 @@ export function DiagramCanvas({ draggedItem, onDrop: onDropProp, sidebarCollapse
       id: `edge-${parentNodeId}-${newNodeId}`,
       source: parentNodeId,
       target: newNodeId,
-      type: 'smoothstep',
-      data: { edgeType: 'free' },
+      type: 'step',
+      data: { edgeType: 'step' },
       markerEnd: { type: 'arrowclosed' },
       style: { stroke: 'hsl(var(--primary))', strokeWidth: 2 }
     };

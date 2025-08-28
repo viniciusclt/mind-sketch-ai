@@ -42,7 +42,7 @@ export default function CustomEdge({
   data = {},
 }: CustomEdgeProps) {
   const { setEdges } = useReactFlow();
-  const { label, edgeType = 'free', color = 'hsl(var(--primary))', strokeWidth = 2 } = data;
+  const { label, edgeType = 'step', color = 'hsl(var(--primary))', strokeWidth = 2 } = data;
 
   // Calculate path based on edge type
   let edgePath, labelX, labelY;
