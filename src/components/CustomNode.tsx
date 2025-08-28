@@ -1,12 +1,7 @@
-import { memo, useState } from 'react';
+import { memo } from 'react';
 import { Handle, Position, NodeProps } from '@xyflow/react';
-import { Button } from '@/components/ui/button';
-import { Plus } from 'lucide-react';
-import { useDiagram } from '../contexts/DiagramContext';
 
 export const CustomNode = memo(({ data, id }: NodeProps) => {
-  const [showAddButton, setShowAddButton] = useState(false);
-  const { addConnectedNode } = useDiagram();
 
   const nodeData = data as {
     label: string;
@@ -80,11 +75,7 @@ export const CustomNode = memo(({ data, id }: NodeProps) => {
   };
 
   return (
-    <div 
-      className={getNodeStyle()}
-      onMouseEnter={() => setShowAddButton(true)}
-      onMouseLeave={() => setShowAddButton(false)}
-    >
+    <div className={getNodeStyle()}>
       <Handle 
         type="target" 
         position={Position.Top} 
@@ -107,21 +98,6 @@ export const CustomNode = memo(({ data, id }: NodeProps) => {
       />
       
       {renderShape()}
-      
-      {showAddButton && (
-        <Button
-          variant="primary"
-          size="sm" 
-          className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 w-6 h-6 p-0 rounded-full shadow-lg opacity-90 hover:opacity-100"
-          onClick={() => {
-            if (addConnectedNode) {
-              addConnectedNode(id, 'bottom');
-            }
-          }}
-        >
-          <Plus className="w-3 h-3" />
-        </Button>
-      )}
     </div>
   );
 });

@@ -1,13 +1,7 @@
-import { useCallback } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Button } from './ui/button';
-import { 
-  ArrowUp, 
-  ArrowDown, 
-  ArrowLeft, 
-  ArrowRight,
-  Plus
-} from 'lucide-react';
-import { Node } from '@xyflow/react';
+import { Plus } from 'lucide-react';
+import { Node, useReactFlow } from '@xyflow/react';
 
 interface FloatingArrowsProps {
   selectedNode: Node;
@@ -15,27 +9,47 @@ interface FloatingArrowsProps {
 }
 
 export function FloatingArrows({ selectedNode, onAddConnectedNode }: FloatingArrowsProps) {
+  const { getViewport, flowToScreenPosition } = useReactFlow();
+  const [screenPosition, setScreenPosition] = useState({ x: 0, y: 0 });
+
   const handleAddNode = useCallback((direction: 'top' | 'bottom' | 'left' | 'right') => {
     onAddConnectedNode(selectedNode.id, direction);
   }, [selectedNode.id, onAddConnectedNode]);
 
-  const nodeRect = {
-    x: selectedNode.position.x,
-    y: selectedNode.position.y,
-    width: selectedNode.measured?.width || 120,
-    height: selectedNode.measured?.height || 60
-  };
+  // Update screen position when node position or viewport changes
+  useEffect(() => {
+    const updateScreenPosition = () => {
+      const nodeWidth = selectedNode.measured?.width || 120;
+      const nodeHeight = selectedNode.measured?.height || 60;
+      
+      // Convert flow position to screen position
+      const screenPos = flowToScreenPosition({
+        x: selectedNode.position.x,
+        y: selectedNode.position.y,
+      });
+      
+      setScreenPosition({
+        x: screenPos.x,
+        y: screenPos.y,
+      });
+    };
+
+    updateScreenPosition();
+  }, [selectedNode.position.x, selectedNode.position.y, selectedNode.measured, flowToScreenPosition, getViewport]);
+
+  const nodeWidth = selectedNode.measured?.width || 120;
+  const nodeHeight = selectedNode.measured?.height || 60;
 
   return (
-    <div className="pointer-events-none">
+    <div className="fixed inset-0 pointer-events-none z-50">
       {/* Top Arrow */}
       <Button
         variant="secondary"
         size="sm"
-        className="absolute pointer-events-auto w-8 h-8 p-0 rounded-full shadow-lg bg-card border-border hover:bg-accent z-50"
+        className="absolute pointer-events-auto w-8 h-8 p-0 rounded-full shadow-lg bg-card border-border hover:bg-accent transition-all"
         style={{
-          left: nodeRect.x + nodeRect.width / 2 - 16,
-          top: nodeRect.y - 32,
+          left: screenPosition.x + nodeWidth / 2 - 16,
+          top: screenPosition.y - 32,
         }}
         onClick={() => handleAddNode('top')}
         title="Add node above"
@@ -47,10 +61,10 @@ export function FloatingArrows({ selectedNode, onAddConnectedNode }: FloatingArr
       <Button
         variant="secondary"
         size="sm"
-        className="absolute pointer-events-auto w-8 h-8 p-0 rounded-full shadow-lg bg-card border-border hover:bg-accent z-50"
+        className="absolute pointer-events-auto w-8 h-8 p-0 rounded-full shadow-lg bg-card border-border hover:bg-accent transition-all"
         style={{
-          left: nodeRect.x + nodeRect.width / 2 - 16,
-          top: nodeRect.y + nodeRect.height + 8,
+          left: screenPosition.x + nodeWidth / 2 - 16,
+          top: screenPosition.y + nodeHeight + 8,
         }}
         onClick={() => handleAddNode('bottom')}
         title="Add node below"
@@ -62,10 +76,10 @@ export function FloatingArrows({ selectedNode, onAddConnectedNode }: FloatingArr
       <Button
         variant="secondary"
         size="sm"
-        className="absolute pointer-events-auto w-8 h-8 p-0 rounded-full shadow-lg bg-card border-border hover:bg-accent z-50"
+        className="absolute pointer-events-auto w-8 h-8 p-0 rounded-full shadow-lg bg-card border-border hover:bg-accent transition-all"
         style={{
-          left: nodeRect.x - 32,
-          top: nodeRect.y + nodeRect.height / 2 - 16,
+          left: screenPosition.x - 32,
+          top: screenPosition.y + nodeHeight / 2 - 16,
         }}
         onClick={() => handleAddNode('left')}
         title="Add node to the left"
@@ -77,10 +91,10 @@ export function FloatingArrows({ selectedNode, onAddConnectedNode }: FloatingArr
       <Button
         variant="secondary"
         size="sm"
-        className="absolute pointer-events-auto w-8 h-8 p-0 rounded-full shadow-lg bg-card border-border hover:bg-accent z-50"
+        className="absolute pointer-events-auto w-8 h-8 p-0 rounded-full shadow-lg bg-card border-border hover:bg-accent transition-all"
         style={{
-          left: nodeRect.x + nodeRect.width + 8,
-          top: nodeRect.y + nodeRect.height / 2 - 16,
+          left: screenPosition.x + nodeWidth + 8,
+          top: screenPosition.y + nodeHeight / 2 - 16,
         }}
         onClick={() => handleAddNode('right')}
         title="Add node to the right"

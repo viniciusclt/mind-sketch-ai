@@ -135,6 +135,13 @@ export function DiagramCanvas({ draggedItem, onDrop: onDropProp, sidebarCollapse
     const parentNode = nodes.find(node => node.id === parentNodeId);
     if (!parentNode) return;
 
+    // Check for existing connections in the specified direction
+    const existingConnections = edges.filter(edge => edge.source === parentNodeId);
+    const existingNodes = existingConnections.map(edge => 
+      nodes.find(node => node.id === edge.target)
+    ).filter(Boolean);
+
+    // Calculate base offset for the direction
     const offsetMap = {
       bottom: { x: 0, y: 120 },
       right: { x: 200, y: 0 },
@@ -142,17 +149,50 @@ export function DiagramCanvas({ draggedItem, onDrop: onDropProp, sidebarCollapse
       top: { x: 0, y: -120 }
     };
 
-    const offset = offsetMap[direction];
-    const newPosition = {
-      x: parentNode.position.x + offset.x,
-      y: parentNode.position.y + offset.y,
+    const baseOffset = offsetMap[direction];
+    let finalPosition = {
+      x: parentNode.position.x + baseOffset.x,
+      y: parentNode.position.y + baseOffset.y,
     };
+
+    // Check if there's already a node in this direction (ramification logic)
+    const nodesInDirection = existingNodes.filter(node => {
+      if (!node) return false;
+      
+      switch (direction) {
+        case 'bottom':
+          return node.position.y > parentNode.position.y && 
+                 Math.abs(node.position.x - parentNode.position.x) < 100;
+        case 'right':
+          return node.position.x > parentNode.position.x && 
+                 Math.abs(node.position.y - parentNode.position.y) < 100;
+        case 'left':
+          return node.position.x < parentNode.position.x && 
+                 Math.abs(node.position.y - parentNode.position.y) < 100;
+        case 'top':
+          return node.position.y < parentNode.position.y && 
+                 Math.abs(node.position.x - parentNode.position.x) < 100;
+        default:
+          return false;
+      }
+    });
+
+    // If nodes already exist in this direction, create a sibling (ramification)
+    if (nodesInDirection.length > 0) {
+      if (direction === 'bottom' || direction === 'top') {
+        // Add horizontal offset for ramification
+        finalPosition.x += (nodesInDirection.length * 150) - 75;
+      } else {
+        // Add vertical offset for ramification  
+        finalPosition.y += (nodesInDirection.length * 100) - 50;
+      }
+    }
 
     const newNodeId = `node-${Date.now()}`;
     const newNode: Node = {
       id: newNodeId,
       type: 'custom',
-      position: newPosition,
+      position: finalPosition,
       data: { 
         label: 'New Node',
         nodeType: 'shapes',
@@ -171,7 +211,15 @@ export function DiagramCanvas({ draggedItem, onDrop: onDropProp, sidebarCollapse
 
     setNodes((nds) => [...nds, newNode]);
     setEdges((eds) => [...eds, newEdge]);
-  }, [nodes, setNodes, setEdges]);
+    
+    // Auto-select the new node
+    setSelectedNodes([newNode]);
+
+    toast({
+      title: "Node Added",
+      description: `Added connected node in ${direction} direction`,
+    });
+  }, [nodes, edges, setNodes, setEdges, toast]);
 
   const onDragOver = useCallback((event: React.DragEvent) => {
     event.preventDefault();
