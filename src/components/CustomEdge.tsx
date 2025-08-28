@@ -4,13 +4,14 @@ import {
   EdgeLabelRenderer,
   getBezierPath,
   getStraightPath,
+  getSmoothStepPath,
   MarkerType,
   useReactFlow,
 } from '@xyflow/react';
 
 export interface CustomEdgeData {
   label?: string;
-  edgeType?: 'arrow' | 'straight' | 'dashed';
+  edgeType?: 'free' | 'step' | 'straight' | 'dashed';
   color?: string;
   strokeWidth?: number;
 }
@@ -41,7 +42,7 @@ export default function CustomEdge({
   data = {},
 }: CustomEdgeProps) {
   const { setEdges } = useReactFlow();
-  const { label, edgeType = 'arrow', color = 'hsl(var(--primary))', strokeWidth = 2 } = data;
+  const { label, edgeType = 'free', color = 'hsl(var(--primary))', strokeWidth = 2 } = data;
 
   // Calculate path based on edge type
   let edgePath, labelX, labelY;
@@ -52,6 +53,16 @@ export default function CustomEdge({
       sourceY,
       targetX,
       targetY,
+    });
+  } else if (edgeType === 'step') {
+    [edgePath, labelX, labelY] = getSmoothStepPath({
+      sourceX,
+      sourceY,
+      sourcePosition,
+      targetX,
+      targetY,
+      targetPosition,
+      borderRadius: 0,
     });
   } else {
     [edgePath, labelX, labelY] = getBezierPath({
@@ -81,29 +92,10 @@ export default function CustomEdge({
     <>
       <BaseEdge 
         path={edgePath} 
-        markerEnd={markerEnd || `url(#arrow-${id})`}
+        markerEnd={markerEnd || MarkerType.ArrowClosed}
         style={edgeStyle}
         onContextMenu={handleContextMenu}
       />
-      
-      {/* Custom arrow marker */}
-      <defs>
-        <marker
-          id={`arrow-${id}`}
-          markerWidth="12"
-          markerHeight="12"
-          refX="8"
-          refY="3"
-          orient="auto"
-          markerUnits="strokeWidth"
-        >
-          <path
-            d="M0,0 L0,6 L9,3 z"
-            fill={color}
-            style={{ strokeWidth: 0 }}
-          />
-        </marker>
-      </defs>
 
       {/* Edge label */}
       {label && (

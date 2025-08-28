@@ -36,10 +36,18 @@ export function EdgeContextMenu({ edge, onUpdateEdge, onDeleteEdge, children }: 
   const [showColorPicker, setShowColorPicker] = useState(false);
   const [newLabel, setNewLabel] = useState<string>((edge.data?.label as string) || '');
 
-  const handleTypeChange = (edgeType: 'arrow' | 'straight' | 'dashed') => {
+  const handleTypeChange = (edgeType: 'free' | 'step' | 'straight' | 'dashed') => {
+    const typeMapping = {
+      'free': 'smoothstep',
+      'step': 'step', 
+      'straight': 'straight',
+      'dashed': 'smoothstep'
+    };
+
     onUpdateEdge(edge.id, {
+      type: typeMapping[edgeType],
       data: { ...edge.data, edgeType },
-      markerEnd: edgeType === 'arrow' ? { type: 'arrowclosed' } : undefined
+      markerEnd: { type: 'arrowclosed' }
     });
   };
 
@@ -71,9 +79,13 @@ export function EdgeContextMenu({ edge, onUpdateEdge, onDeleteEdge, children }: 
             Tipo de Linha
           </ContextMenuSubTrigger>
           <ContextMenuSubContent>
-            <ContextMenuItem onClick={() => handleTypeChange('arrow')}>
+            <ContextMenuItem onClick={() => handleTypeChange('free')}>
               <Zap className="mr-2 h-4 w-4" />
-              Seta (Padrão)
+              Linha Livre (Curva)
+            </ContextMenuItem>
+            <ContextMenuItem onClick={() => handleTypeChange('step')}>
+              <Minus className="mr-2 h-4 w-4 rotate-90" />
+              Linha 90° (Ângulo)
             </ContextMenuItem>
             <ContextMenuItem onClick={() => handleTypeChange('straight')}>
               <Minus className="mr-2 h-4 w-4" />
