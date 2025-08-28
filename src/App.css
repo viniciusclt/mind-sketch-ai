@@ -1,9 +1,4 @@
-#root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
-}
+/* Removed problematic global styles that were interfering with the diagram canvas */
 
 .logo {
   height: 6em;
