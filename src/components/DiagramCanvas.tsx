@@ -27,6 +27,7 @@ import { Swimlanes, useSwimlanesManager } from './Swimlanes';
 import { SwimlanesPanel } from './SwimlanesPanel';
 import { LayersManager, useLayersManager } from './LayersManager';
 import { IconLibrary } from './IconLibrary';
+import { AutoLayoutControls } from './AutoLayoutControls';
 
 const initialNodes: Node[] = [
   {
@@ -117,6 +118,7 @@ export function DiagramCanvas({ draggedItem, onDrop: onDropProp, sidebarCollapse
   const [showNLParser, setShowNLParser] = useState(false);
   const [selectedEdge, setSelectedEdge] = useState<Edge | null>(null);
   const [showIconLibrary, setShowIconLibrary] = useState(false);
+  const [showAutoLayout, setShowAutoLayout] = useState(false);
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
   
   // Swimlanes management
@@ -576,6 +578,7 @@ export function DiagramCanvas({ draggedItem, onDrop: onDropProp, sidebarCollapse
           onExport={handleExport}
           onToggleNLParser={() => setShowNLParser(!showNLParser)}
           onToggleIconLibrary={() => setShowIconLibrary(!showIconLibrary)}
+          onToggleAutoLayout={() => setShowAutoLayout(!showAutoLayout)}
         />
 
         {showNLParser && (
@@ -634,6 +637,14 @@ export function DiagramCanvas({ draggedItem, onDrop: onDropProp, sidebarCollapse
               setShowIconLibrary(false);
             }}
             onClose={() => setShowIconLibrary(false)}
+          />
+        )}
+
+        {/* Auto Layout Controls */}
+        {showAutoLayout && (
+          <AutoLayoutControls
+            selectedNodeIds={selectedNodes.map(node => node.id)}
+            onClose={() => setShowAutoLayout(false)}
           />
         )}
 

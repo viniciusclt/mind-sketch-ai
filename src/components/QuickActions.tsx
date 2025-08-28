@@ -9,7 +9,8 @@ import {
   Move3D,
   Download,
   FileText,
-  Star
+  Star,
+  LayoutGrid
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
@@ -20,9 +21,10 @@ interface QuickActionsProps {
   onExport?: () => void;
   onToggleNLParser?: () => void;
   onToggleIconLibrary?: () => void;
+  onToggleAutoLayout?: () => void;
 }
 
-export function QuickActions({ selectedNodes = [], onDeleteNodes, onCopyNodes, onExport, onToggleNLParser, onToggleIconLibrary }: QuickActionsProps) {
+export function QuickActions({ selectedNodes = [], onDeleteNodes, onCopyNodes, onExport, onToggleNLParser, onToggleIconLibrary, onToggleAutoLayout }: QuickActionsProps) {
   const { toast } = useToast();
 
   const handleDelete = () => {
@@ -66,6 +68,18 @@ export function QuickActions({ selectedNodes = [], onDeleteNodes, onCopyNodes, o
           title="Icon Library"
         >
           <Star className="h-4 w-4" />
+        </Button>
+      )}
+
+      {onToggleAutoLayout && (
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-8 w-8 p-0"
+          onClick={onToggleAutoLayout}
+          title="Auto Layout"
+        >
+          <LayoutGrid className="h-4 w-4" />
         </Button>
       )}
       
