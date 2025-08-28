@@ -424,15 +424,15 @@ export function DiagramCanvas({ draggedItem, onDrop: onDropProp, sidebarCollapse
             pannable
             zoomable
           />
+          
+          {/* Floating Arrows for single node selection - inside ReactFlow */}
+          {selectedNodes.length === 1 && (
+            <FloatingArrows
+              selectedNode={selectedNodes[0]}
+              onAddConnectedNode={addConnectedNode}
+            />
+          )}
         </ReactFlow>
-        
-        {/* Floating Arrows for single node selection */}
-        {selectedNodes.length === 1 && (
-          <FloatingArrows
-            selectedNode={selectedNodes[0]}
-            onAddConnectedNode={addConnectedNode}
-          />
-        )}
         
         <QuickActions 
           selectedNodes={selectedNodes.map(node => node.id)}
