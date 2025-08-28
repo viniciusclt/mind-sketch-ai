@@ -139,3 +139,48 @@ All colors MUST be HSL.
     @apply bg-background text-foreground;
   }
 }
+
+/* Mobile and Tablet Responsiveness */
+@media (max-width: 768px) {
+  .react-flow__controls {
+    bottom: 20px !important;
+    right: 20px !important;
+    left: auto !important;
+  }
+  
+  .react-flow__minimap {
+    display: none;
+  }
+}
+
+/* Mobile landscape orientation */
+@media (max-width: 968px) and (orientation: landscape) {
+  .react-flow__controls {
+    scale: 0.8;
+  }
+}
+
+/* Tablet landscape */
+@media (min-width: 768px) and (max-width: 1024px) and (orientation: landscape) {
+  .react-flow__minimap {
+    width: 150px !important;
+    height: 100px !important;
+  }
+}
+
+/* Touch devices */
+@media (hover: none) and (pointer: coarse) {
+  .react-flow__node {
+    cursor: grab;
+  }
+  
+  .react-flow__node:active {
+    cursor: grabbing;
+  }
+  
+  .react-flow__handle {
+    width: 12px !important;
+    height: 12px !important;
+  }
+}
+}

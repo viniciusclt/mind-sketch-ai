@@ -1,0 +1,32 @@
+{
+  "name": "DiagramFlow - Professional Diagramming Tool",
+  "short_name": "DiagramFlow",
+  "description": "Create professional diagrams with AI assistance, works offline",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#3b82f6",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "/placeholder.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/placeholder.svg", 
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["productivity", "business", "utilities"],
+  "screenshots": [],
+  "features": [
+    "offline",
+    "drag-and-drop",
+    "templates",
+    "responsive"
+  ]
+}

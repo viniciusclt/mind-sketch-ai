@@ -1,4 +1,5 @@
 import { Button } from '@/components/ui/button';
+import { TemplateModal } from './TemplateModal';
 import { 
   Square, 
   Circle, 
@@ -7,15 +8,18 @@ import {
   MousePointer,
   Minus,
   Move3D,
-  Zap
+  Zap,
+  RotateCcw,
+  RotateCw
 } from 'lucide-react';
 
 interface ToolbarProps {
   activeTool: string;
   onToolChange: (tool: string) => void;
+  onApplyTemplate?: (template: any) => void;
 }
 
-export function Toolbar({ activeTool, onToolChange }: ToolbarProps) {
+export function Toolbar({ activeTool, onToolChange, onApplyTemplate }: ToolbarProps) {
   const tools = [
     { id: 'select', icon: MousePointer, label: 'Select' },
     { id: 'rectangle', icon: Square, label: 'Rectangle' },
@@ -27,17 +31,17 @@ export function Toolbar({ activeTool, onToolChange }: ToolbarProps) {
   ];
 
   return (
-    <div className="bg-card border-b border-border px-4 py-3 flex items-center gap-2 shadow-toolbar">
-      <div className="flex items-center gap-1 mr-4">
+    <div className="bg-card border-b border-border px-4 py-3 flex items-center gap-2 shadow-toolbar overflow-x-auto">
+      <div className="flex items-center gap-1 mr-4 flex-shrink-0">
         <Button variant="primary" size="sm" className="gap-2">
           <Zap className="h-4 w-4" />
-          AI Assistant
+          <span className="hidden sm:inline">AI Assistant</span>
         </Button>
       </div>
       
       <div className="w-px h-6 bg-border mx-2" />
       
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-1 flex-shrink-0">
         {tools.map((tool) => {
           const Icon = tool.icon;
           return (
@@ -53,6 +57,25 @@ export function Toolbar({ activeTool, onToolChange }: ToolbarProps) {
             </Button>
           );
         })}
+      </div>
+
+      <div className="w-px h-6 bg-border mx-2" />
+
+      <div className="flex items-center gap-1 flex-shrink-0">
+        <Button variant="ghost" size="sm" title="Rotate Left">
+          <RotateCcw className="h-4 w-4" />
+        </Button>
+        <Button variant="ghost" size="sm" title="Rotate Right">
+          <RotateCw className="h-4 w-4" />
+        </Button>
+      </div>
+
+      <div className="w-px h-6 bg-border mx-2" />
+
+      <div className="flex items-center gap-1 flex-shrink-0">
+        {onApplyTemplate && (
+          <TemplateModal onApplyTemplate={onApplyTemplate} />
+        )}
       </div>
     </div>
   );

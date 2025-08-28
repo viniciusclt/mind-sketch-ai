@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useState, useRef, useEffect } from 'react';
 import {
   ReactFlow,
   addEdge,
@@ -11,8 +11,10 @@ import {
   Edge,
   Node,
   BackgroundVariant,
+  useReactFlow,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
+import { CustomNode } from './CustomNode';
 
 const initialNodes: Node[] = [
   {
@@ -74,23 +76,76 @@ const initialEdges: Edge[] = [
   },
 ];
 
-export function DiagramCanvas() {
+const nodeTypes = {
+  custom: CustomNode,
+};
+
+interface DiagramCanvasProps {
+  draggedItem: any;
+  onDrop: (position: { x: number; y: number }) => void;
+  sidebarCollapsed: boolean;
+}
+
+export function DiagramCanvas({ draggedItem, onDrop: onDropProp, sidebarCollapsed }: DiagramCanvasProps) {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+  const reactFlowWrapper = useRef<HTMLDivElement>(null);
 
   const onConnect = useCallback(
     (params: Connection) => setEdges((eds) => addEdge(params, eds)),
     [setEdges]
   );
 
+  const onDragOver = useCallback((event: React.DragEvent) => {
+    event.preventDefault();
+    event.dataTransfer.dropEffect = 'move';
+  }, []);
+
+  const onDropHandler = useCallback(
+    (event: React.DragEvent) => {
+      event.preventDefault();
+      if (!draggedItem || !reactFlowWrapper.current) return;
+
+      const reactFlowBounds = reactFlowWrapper.current.getBoundingClientRect();
+      const position = {
+        x: event.clientX - reactFlowBounds.left,
+        y: event.clientY - reactFlowBounds.top,
+      };
+
+      const newNode: Node = {
+        id: `${draggedItem.type}-${Date.now()}`,
+        type: 'custom',
+        position,
+        data: { 
+          label: draggedItem.item.name,
+          nodeType: draggedItem.type,
+          shape: draggedItem.item.name.toLowerCase(),
+          preview: draggedItem.item.preview
+        },
+      };
+
+      setNodes((nds) => nds.concat(newNode));
+      onDropProp(position);
+    },
+    [draggedItem, setNodes, onDropProp]
+  );
+
   return (
-    <div className="flex-1 bg-canvas-background relative">
+    <div 
+      ref={reactFlowWrapper}
+      className={`flex-1 bg-canvas-background relative transition-all duration-300 ${
+        sidebarCollapsed ? 'ml-0' : 'ml-0 md:ml-0'
+      }`}
+      onDrop={onDropHandler}
+      onDragOver={onDragOver}
+    >
       <ReactFlow
         nodes={nodes}
         edges={edges}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
+        nodeTypes={nodeTypes}
         fitView
         className="bg-canvas-background"
         style={{ background: 'hsl(var(--canvas-background))' }}

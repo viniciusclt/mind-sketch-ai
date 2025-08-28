@@ -7,18 +7,39 @@ import {
   Redo,
   Settings,
   Menu,
-  FileText
+  FileText,
+  PanelLeftClose,
+  PanelLeft
 } from 'lucide-react';
 
-export function Header() {
+interface HeaderProps {
+  sidebarCollapsed: boolean;
+  onToggleSidebar: () => void;
+}
+
+export function Header({ sidebarCollapsed, onToggleSidebar }: HeaderProps) {
   return (
     <header className="h-14 bg-card border-b border-border flex items-center justify-between px-4 shadow-card">
       <div className="flex items-center gap-4">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onToggleSidebar}
+          className="h-9 w-9 p-0"
+          title="Toggle Sidebar"
+        >
+          {sidebarCollapsed ? (
+            <PanelLeft className="h-4 w-4" />
+          ) : (
+            <PanelLeftClose className="h-4 w-4" />
+          )}
+        </Button>
+        
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 bg-gradient-primary rounded-lg flex items-center justify-center">
             <FileText className="h-5 w-5 text-primary-foreground" />
           </div>
-          <h1 className="text-xl font-bold text-foreground">DiagramFlow</h1>
+          <h1 className="text-xl font-bold text-foreground hidden sm:block">DiagramFlow</h1>
         </div>
         
         <div className="w-px h-6 bg-border mx-2" />
