@@ -49,6 +49,10 @@ All colors MUST be HSL.
     --canvas-grid: 215 20% 90%;
     --canvas-selected: 214 88% 52%;
     
+    /* Selection colors */
+    --selection-primary: 214 88% 52%;
+    --selection-secondary: 147 197 253;
+    
     /* Sidebar styling */
     --sidebar-background: 0 0% 99%;
     --sidebar-foreground: 215 25% 15%;
@@ -228,4 +232,32 @@ All colors MUST be HSL.
   fill: hsl(var(--primary) / 0.1);
   stroke: hsl(var(--primary));
   stroke-width: 2;
+}
+
+/* React Flow Node Customizations */
+.react-flow__node-custom {
+  padding: 0;
+  background: transparent;
+  border: none;
+}
+
+.react-flow__node-custom.selected {
+  outline: 3px solid hsl(var(--selection-primary));
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+
+.react-flow__node-custom:hover {
+  box-shadow: 0 0 20px hsl(var(--selection-secondary) / 0.4);
+}
+
+/* Better visual feedback for selection */
+.react-flow__node.selected {
+  background: hsl(var(--selection-secondary) / 0.1) !important;
+  border-color: hsl(var(--selection-primary)) !important;
+}
+
+/* Context menu improvements */
+.react-flow__node-contextmenu {
+  z-index: 1000 !important;
 }

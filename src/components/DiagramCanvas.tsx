@@ -18,49 +18,43 @@ import { CustomNode } from './CustomNode';
 import { DiagramProvider } from '../contexts/DiagramContext';
 import { QuickActions } from './QuickActions';
 import { NodeContextMenu } from './NodeContextMenu';
+import { NaturalLanguageParser } from './NaturalLanguageParser';
 import { saveDiagramToLocal } from '../utils/offline';
 import { toast } from '@/hooks/use-toast';
 
 const initialNodes: Node[] = [
   {
     id: '1',
-    type: 'default',
-    data: { label: 'Start' },
-    position: { x: 250, y: 50 },
-    style: {
-      background: 'hsl(var(--primary))',
-      color: 'hsl(var(--primary-foreground))',
-      border: '2px solid hsl(var(--primary))',
-      borderRadius: '12px',
-      fontSize: '14px',
-      fontWeight: '500',
+    type: 'custom',
+    data: { 
+      label: 'Start',
+      nodeType: 'shapes',
+      shape: 'rectangle',
+      preview: '▭'
     },
+    position: { x: 250, y: 50 },
   },
   {
     id: '2',
-    type: 'default',
-    data: { label: 'Process' },
-    position: { x: 100, y: 150 },
-    style: {
-      background: 'hsl(var(--card))',
-      color: 'hsl(var(--card-foreground))',
-      border: '2px solid hsl(var(--border))',
-      borderRadius: '12px',
-      fontSize: '14px',
+    type: 'custom',
+    data: { 
+      label: 'Process',
+      nodeType: 'shapes',
+      shape: 'rectangle',
+      preview: '▭'
     },
+    position: { x: 100, y: 150 },
   },
   {
     id: '3',
-    type: 'default',
-    data: { label: 'Decision' },
-    position: { x: 400, y: 150 },
-    style: {
-      background: 'hsl(var(--accent))',
-      color: 'hsl(var(--accent-foreground))',
-      border: '2px solid hsl(var(--border))',
-      borderRadius: '12px',
-      fontSize: '14px',
+    type: 'custom',
+    data: { 
+      label: 'Decision',
+      nodeType: 'shapes',
+      shape: 'diamond',
+      preview: '◆'
     },
+    position: { x: 400, y: 150 },
   },
 ];
 
@@ -92,12 +86,22 @@ interface DiagramCanvasProps {
   templateToApply?: any;
 }
 
+const shapes = [
+  { name: 'rectangle', preview: '▭' },
+  { name: 'circle', preview: '●' },
+  { name: 'diamond', preview: '◆' },
+  { name: 'triangle', preview: '▲' },
+  { name: 'hexagon', preview: '⬡' },
+  { name: 'ellipse', preview: '⬭' },
+];
+
 export function DiagramCanvas({ draggedItem, onDrop: onDropProp, sidebarCollapsed, templateToApply }: DiagramCanvasProps) {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
   const [selectedNodes, setSelectedNodes] = useState<Node[]>([]);
   const [contextMenuPosition, setContextMenuPosition] = useState<{ x: number; y: number } | null>(null);
   const [editingNodeId, setEditingNodeId] = useState<string | null>(null);
+  const [showNLParser, setShowNLParser] = useState(false);
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
 
   // Auto-save diagram every 30 seconds
@@ -253,13 +257,6 @@ export function DiagramCanvas({ draggedItem, onDrop: onDropProp, sidebarCollapse
   }, []);
 
   const handleChangeShape = useCallback((nodeId: string, newShape: string) => {
-    const shapes = [
-      { name: 'rectangle', preview: '▭' },
-      { name: 'circle', preview: '●' },
-      { name: 'diamond', preview: '◆' },
-      { name: 'triangle', preview: '▲' },
-    ];
-    
     setNodes((nds) => 
       nds.map(node => 
         node.id === nodeId 
@@ -296,7 +293,17 @@ export function DiagramCanvas({ draggedItem, onDrop: onDropProp, sidebarCollapse
       });
     }
     setEditingNodeId(nodeId);
-  }, []);
+  }, [setNodes]);
+
+  const handleNaturalLanguageDiagram = useCallback((newNodes: Node[], newEdges: Edge[]) => {
+    setNodes(newNodes);
+    setEdges(newEdges);
+    setShowNLParser(false);
+    toast({
+      title: "Diagram Generated",
+      description: "Natural language diagram has been created",
+    });
+  }, [setNodes, setEdges]);
 
   // Add keyboard shortcuts
   useEffect(() => {
@@ -340,6 +347,17 @@ export function DiagramCanvas({ draggedItem, onDrop: onDropProp, sidebarCollapse
             setSelectedNodes(params.nodes);
             if (params.nodes.length === 0) {
               setContextMenuPosition(null);
+            } else if (params.nodes.length === 1) {
+              // Show context menu for single node selection
+              const node = params.nodes[0];
+              const nodeElement = document.querySelector(`[data-id="${node.id}"]`);
+              if (nodeElement) {
+                const rect = nodeElement.getBoundingClientRect();
+                setContextMenuPosition({
+                  x: rect.right + 10,
+                  y: rect.top
+                });
+              }
             }
           }}
           onNodeContextMenu={handleNodeContextMenu}
@@ -376,7 +394,14 @@ export function DiagramCanvas({ draggedItem, onDrop: onDropProp, sidebarCollapse
           onDeleteNodes={handleDeleteNodes}
           onCopyNodes={handleCopyNodes}
           onExport={handleExport}
+          onToggleNLParser={() => setShowNLParser(!showNLParser)}
         />
+
+        {showNLParser && (
+          <div className="absolute top-4 left-4 z-40">
+            <NaturalLanguageParser onDiagramGenerated={handleNaturalLanguageDiagram} />
+          </div>
+        )}
 
         <NodeContextMenu
           selectedNodes={selectedNodes}

@@ -25,6 +25,10 @@ export const CustomNode = memo(({ data, id }: NodeProps) => {
         return `${baseStyle} transform rotate-45 w-16 h-16`;
       case 'triangle':
         return `${baseStyle} bg-transparent border-transparent`;
+      case 'hexagon':
+        return `${baseStyle} bg-transparent border-transparent`;
+      case 'ellipse':
+        return `${baseStyle} rounded-full w-28 h-16`;
       default:
         return `${baseStyle} rounded-lg border-border`;
     }
@@ -33,7 +37,26 @@ export const CustomNode = memo(({ data, id }: NodeProps) => {
   const renderShape = () => {
     if (nodeData.shape === 'triangle') {
       return (
-        <div className="w-0 h-0 border-l-[30px] border-r-[30px] border-b-[50px] border-l-transparent border-r-transparent border-b-primary" />
+        <div className="relative">
+          <div className="w-0 h-0 border-l-[30px] border-r-[30px] border-b-[50px] border-l-transparent border-r-transparent border-b-primary" />
+          <span className="absolute top-6 left-1/2 transform -translate-x-1/2 text-xs text-primary-foreground">{nodeData.label}</span>
+        </div>
+      );
+    }
+    
+    if (nodeData.shape === 'hexagon') {
+      return (
+        <div className="relative w-16 h-16 flex items-center justify-center">
+          <div 
+            className="w-16 h-16 bg-primary" 
+            style={{
+              clipPath: 'polygon(25% 6.7%, 75% 6.7%, 100% 50%, 75% 93.3%, 25% 93.3%, 0% 50%)'
+            }} 
+          />
+          <span className="absolute inset-0 flex items-center justify-center text-xs text-primary-foreground font-medium">
+            {nodeData.label}
+          </span>
+        </div>
       );
     }
     

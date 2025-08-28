@@ -7,7 +7,8 @@ import {
   ZoomIn,
   ZoomOut,
   Move3D,
-  Download
+  Download,
+  FileText
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
@@ -16,9 +17,10 @@ interface QuickActionsProps {
   onDeleteNodes?: (nodeIds: string[]) => void;
   onCopyNodes?: (nodeIds: string[]) => void;
   onExport?: () => void;
+  onToggleNLParser?: () => void;
 }
 
-export function QuickActions({ selectedNodes = [], onDeleteNodes, onCopyNodes, onExport }: QuickActionsProps) {
+export function QuickActions({ selectedNodes = [], onDeleteNodes, onCopyNodes, onExport, onToggleNLParser }: QuickActionsProps) {
   const { toast } = useToast();
 
   const handleDelete = () => {
@@ -53,6 +55,18 @@ export function QuickActions({ selectedNodes = [], onDeleteNodes, onCopyNodes, o
 
   return (
     <div className="fixed bottom-4 right-4 bg-card border border-border rounded-lg shadow-card p-2 flex gap-1 z-10">
+      {onToggleNLParser && (
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-8 w-8 p-0"
+          onClick={onToggleNLParser}
+          title="Natural Language Parser"
+        >
+          <FileText className="h-4 w-4" />
+        </Button>
+      )}
+      
       <Button
         variant="ghost"
         size="sm"

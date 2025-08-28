@@ -10,6 +10,7 @@ import {
   Circle, 
   Triangle,
   Diamond,
+  Hexagon,
   Edit
 } from 'lucide-react';
 import { Node } from '@xyflow/react';
@@ -28,6 +29,7 @@ const shapes = [
   { name: 'circle', icon: Circle, preview: '●' },
   { name: 'diamond', icon: Diamond, preview: '◆' },
   { name: 'triangle', icon: Triangle, preview: '▲' },
+  { name: 'hexagon', icon: Hexagon, preview: '⬡' },
 ];
 
 const directions = [
@@ -120,7 +122,7 @@ export function NodeContextMenu({
 
         {/* Shape Change Options */}
         <div className="text-xs font-medium text-muted-foreground mb-1">Change Shape</div>
-        <div className="grid grid-cols-2 gap-1 mb-2">
+        <div className="grid grid-cols-3 gap-1 mb-2">
           {shapes.map(({ name, icon: Icon, preview }) => (
             <Button
               key={name}
@@ -130,7 +132,7 @@ export function NodeContextMenu({
               className="h-8 text-xs justify-start gap-1"
             >
               <Icon className="w-3 h-3" />
-              <span className="capitalize">{name}</span>
+              <span className="capitalize text-xs">{name}</span>
             </Button>
           ))}
         </div>
