@@ -79,7 +79,7 @@ export function SwimlanesPanel({
   }
 
   return (
-    <Card className="fixed bottom-4 right-4 z-40 w-80 shadow-lg">
+    <Card className="fixed bottom-4 right-4 z-30 w-80 shadow-lg">
       <CardHeader className="pb-3">
         <CardTitle className="text-sm flex items-center justify-between">
           <div className="flex items-center">

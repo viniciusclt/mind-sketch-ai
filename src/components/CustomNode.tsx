@@ -1,7 +1,47 @@
-import { memo } from 'react';
+import { memo, useState, useEffect } from 'react';
 import { Handle, Position, NodeProps } from '@xyflow/react';
+import { Input } from '@/components/ui/input';
 
 export const CustomNode = memo(({ data, id }: NodeProps) => {
+  const [isEditing, setIsEditing] = useState(false);
+  const [label, setLabel] = useState(String(data.label || 'Node'));
+
+  useEffect(() => {
+    setLabel(String(data.label || 'Node'));
+  }, [data.label]);
+
+  // Check if this node is being edited globally
+  useEffect(() => {
+    const handleGlobalEditMode = (event: CustomEvent) => {
+      setIsEditing(event.detail === id);
+    };
+    
+    window.addEventListener('editNode', handleGlobalEditMode as EventListener);
+    return () => window.removeEventListener('editNode', handleGlobalEditMode as EventListener);
+  }, [id]);
+
+  const handleDoubleClick = () => {
+    setIsEditing(true);
+  };
+
+  const handleSave = () => {
+    setIsEditing(false);
+    // Trigger update to parent
+    const event = new CustomEvent('updateNodeLabel', {
+      detail: { nodeId: id, newLabel: label }
+    });
+    window.dispatchEvent(event);
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleSave();
+    }
+    if (e.key === 'Escape') {
+      setLabel(String(data.label || 'Node'));
+      setIsEditing(false);
+    }
+  };
 
   const nodeData = data as {
     label: string;
@@ -32,46 +72,96 @@ export const CustomNode = memo(({ data, id }: NodeProps) => {
   const renderShape = () => {
     if (nodeData.shape === 'triangle') {
       return (
-        <div className="relative">
+        <div className="relative" onDoubleClick={handleDoubleClick}>
           <div className="w-0 h-0 border-l-[30px] border-r-[30px] border-b-[50px] border-l-transparent border-r-transparent border-b-primary" />
-          <span className="absolute top-6 left-1/2 transform -translate-x-1/2 text-xs text-primary-foreground">{nodeData.label}</span>
+          <div className="absolute top-6 left-1/2 transform -translate-x-1/2">
+            {isEditing ? (
+              <Input
+                value={label}
+                onChange={(e) => setLabel(e.target.value)}
+                onBlur={handleSave}
+                onKeyDown={handleKeyPress}
+                className="text-xs text-center w-20 h-6 p-1"
+                autoFocus
+              />
+            ) : (
+              <span className="text-xs text-primary-foreground cursor-pointer">{String(label)}</span>
+            )}
+          </div>
         </div>
       );
     }
     
     if (nodeData.shape === 'hexagon') {
       return (
-        <div className="relative w-16 h-16 flex items-center justify-center">
+        <div className="relative w-16 h-16 flex items-center justify-center" onDoubleClick={handleDoubleClick}>
           <div 
             className="w-16 h-16 bg-primary" 
             style={{
               clipPath: 'polygon(25% 6.7%, 75% 6.7%, 100% 50%, 75% 93.3%, 25% 93.3%, 0% 50%)'
             }} 
           />
-          <span className="absolute inset-0 flex items-center justify-center text-xs text-primary-foreground font-medium">
-            {nodeData.label}
-          </span>
+          <div className="absolute inset-0 flex items-center justify-center">
+            {isEditing ? (
+              <Input
+                value={label}
+                onChange={(e) => setLabel(e.target.value)}
+                onBlur={handleSave}
+                onKeyDown={handleKeyPress}
+                className="text-xs text-center w-16 h-6 p-1"
+                autoFocus
+              />
+            ) : (
+              <span className="text-xs text-primary-foreground font-medium cursor-pointer">{String(label)}</span>
+            )}
+          </div>
         </div>
       );
     }
     
     if (nodeData.shape === 'diamond') {
       return (
-        <div className="relative w-20 h-20 flex items-center justify-center">
+        <div className="relative w-20 h-20 flex items-center justify-center" onDoubleClick={handleDoubleClick}>
           <div 
             className="w-20 h-20 bg-primary border-2 border-border" 
             style={{
               clipPath: 'polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)'
             }} 
           />
-          <span className="absolute inset-0 flex items-center justify-center text-xs text-primary-foreground font-medium">
-            {nodeData.label}
-          </span>
+          <div className="absolute inset-0 flex items-center justify-center">
+            {isEditing ? (
+              <Input
+                value={label}
+                onChange={(e) => setLabel(e.target.value)}
+                onBlur={handleSave}
+                onKeyDown={handleKeyPress}
+                className="text-xs text-center w-16 h-6 p-1"
+                autoFocus
+              />
+            ) : (
+              <span className="text-xs text-primary-foreground font-medium cursor-pointer">{String(label)}</span>
+            )}
+          </div>
         </div>
       );
     }
 
-    return <span>{nodeData.label}</span>;
+    return (
+      <div onDoubleClick={handleDoubleClick} className="cursor-pointer">
+        {isEditing ? (
+          <Input
+            value={label}
+            onChange={(e) => setLabel(e.target.value)}
+            onBlur={handleSave}
+            onKeyDown={handleKeyPress}
+            className="text-sm text-center min-w-[100px] h-8 p-2"
+            autoFocus
+          />
+        ) : (
+          <span>{String(label)}</span>
+        )}
+      </div>
+    );
   };
 
   return (

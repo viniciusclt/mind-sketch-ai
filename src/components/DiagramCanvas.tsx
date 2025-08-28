@@ -380,8 +380,15 @@ export function DiagramCanvas({ draggedItem, onDrop: onDropProp, sidebarCollapse
   }, [setNodes]);
 
   const handleEditLabel = useCallback((nodeId: string) => {
-    const newLabel = prompt('Enter new label:');
-    if (newLabel !== null) {
+    setEditingNodeId(nodeId);
+    // Trigger global edit event
+    window.dispatchEvent(new CustomEvent('editNode', { detail: nodeId }));
+  }, []);
+
+  // Listen for custom events to update node labels
+  useEffect(() => {
+    const handleNodeLabelUpdate = (event: CustomEvent) => {
+      const { nodeId, newLabel } = event.detail;
       setNodes((nds) => 
         nds.map(node => 
           node.id === nodeId 
@@ -389,12 +396,17 @@ export function DiagramCanvas({ draggedItem, onDrop: onDropProp, sidebarCollapse
             : node
         )
       );
+      setEditingNodeId(null);
       toast({
         title: "Label Updated",
         description: `Node label changed to "${newLabel}"`,
       });
-    }
-    setEditingNodeId(nodeId);
+    };
+
+    window.addEventListener('updateNodeLabel', handleNodeLabelUpdate as EventListener);
+    return () => {
+      window.removeEventListener('updateNodeLabel', handleNodeLabelUpdate as EventListener);
+    };
   }, [setNodes]);
 
   const handleChangeColor = useCallback((nodeIds: string[], colorType: 'border' | 'background' | 'text', color: string, hsl: string) => {
